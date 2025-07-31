@@ -1,0 +1,4180 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kaely Certificadora - Sistema de Ponto Eletrônico</title>
+<link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+        /* Cores da Kaely para referência: */
+        /* Verde principal da logo: #2E8B57 */
+        /* Verde mais escuro para hover/ativo: #1e603e */
+        /* Verde médio profissional para sidebar: #2f855a */
+        /* Verde pastel para itens de menu hover/ativo: #c6f6d5 */
+        /* Verde para botões de ação: #38a169 */
+        /* Verde escuro para texto principal: #22543d */
+        /* Verde para degradê de fundo (mais claro): #4CAF50 */
+        /* Verde para degradê de fundo (mais escuro): #2E7D32 */
+
+        /* Estilos Gerais do Body */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Estilos ESPECÍFICOS da Tela de LOGIN --- */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #2E8B57, #1e603e);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+        }
+        
+        .login-box {
+            background: white;
+            padding: 45px 35px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            z-index: 3;
+        }
+
+        .login-box .logo {
+            max-width: 180px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+
+        .login-box .input-group {
+            position: relative;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .login-box .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            box-sizing: border-box;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s ease;
+            background-color: #E0FFE0;
+        }
+        
+        .login-box .input-group #usuario {
+            padding-right: 40px;
+        }
+
+        .login-box .input-group #senha {
+            padding-right: 40px;
+        }
+
+        .login-box .input-group input:focus {
+            border-color: #2E8B57;
+        }
+
+        .login-box .input-group .material-icons.user-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+            font-size: 1.3em;
+        }
+
+        .login-box button {
+            background-color: #2E8B57;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .login-box button:hover {
+            background-color: #1e603e;
+        }
+
+        .login-box .forgot-password-link {
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #007bff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .login-box .forgot-password-link:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
+        .login-box .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #777;
+            font-size: 1.2em;
+        }
+
+        .login-box .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+            font-size: 0.9em;
+            text-align: center;
+            width: 100%;
+            display: none;
+        }
+
+        /* --- Estilos PARA a Aplicação PÓS-LOGIN --- */
+
+        /* Wrapper principal da aplicação pós-login */
+        #app-wrapper {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            flex-direction: column;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: #333;
+            overflow: hidden;
+        }
+
+        /* Header Fixo no Topo */
+        #main-header {
+            background-color: white;
+            padding: 15px 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+            flex-shrink: 0;
+            z-index: 100;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #main-header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #22543d;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        #main-header .user-info .material-icons {
+            font-size: 1.8em;
+            color: #2E8B57;
+        }
+
+        #main-header button.logout-btn {
+            background-color: transparent;
+            color: #2E8B57;
+            padding: 8px 15px;
+            border: 1px solid #2E8B57;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #main-header button.logout-btn:hover {
+            background-color: #e6f7ee;
+            color: #1e603e;
+            transform: translateY(-2px);
+        }
+
+        #main-header button.logout-btn:active {
+            transform: scale(0.98);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Área de conteúdo principal (sidebar + main-content) */
+        #content-area-wrapper {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* Estilo da Sidebar */
+        #sidebar {
+            background: #2f855a;
+            color: white;
+            width: 250px;
+            flex-shrink: 0;
+            padding: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 90;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            background-color: #2f855a;
+            padding: 15px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header img {
+            max-width: 180px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .menu-section-title {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 15px 20px 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 15px;
+        }
+
+        /* Estilo melhorado para o cabeçalho de Cadastro */
+        .cadastro-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 20px;
+            cursor: pointer;
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 15px 10px 5px;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+        }
+
+        .cadastro-header:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-left: 3px solid #c6f6d5;
+        }
+
+        .cadastro-header .material-icons {
+            font-size: 1.4em;
+            color: #c6f6d5;
+        }
+
+        .cadastro-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        /* Quando o menu está aberto */
+        #cadastro-menu-items {
+            margin-top: 5px;
+            padding-left: 15px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            margin-left: 25px;
+        }
+
+        /* Efeito de abertura/suavização */
+        #cadastro-menu-items {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-nav ul li {
+            margin-bottom: 5px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .menu-item .material-icons {
+            margin-right: 15px;
+            font-size: 1.4em;
+        }
+
+        .menu-item:hover {
+            background-color: #c6f6d5;
+            color: #2e8b57;
+        }
+
+        .menu-item.active {
+            background-color: #c6f6d5;
+            color: #2e8b57;
+            font-weight: bold;
+            border-left: 5px solid #2E8B57;
+            padding-left: 15px;
+        }
+
+        /* Estilo para o contêiner principal que contém as telas de ponto/cadastro */
+        #main-content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            background-color: white;
+            width: 100%;
+            height: calc(100vh - 70px - 50px); /* Altura total menos header e footer */
+        }
+
+        /* Estilo para as telas dentro do main-content-area */
+        .content-screen {
+            background: white;
+            padding: 30px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Estilo para a tela de ponto principal */
+        #point-screen {
+            /* Inherits .content-screen styles */
+        }
+
+        #point-screen .current-time {
+            font-size: 2.5em;
+            font-weight: 600;
+            color: #2E8B57;
+            margin-bottom: 25px;
+        }
+
+        #point-screen .point-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        #point-screen .point-actions button {
+            background-color: #38a169;
+            color: white;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        #point-screen .point-actions button:hover {
+            background-color: #2f855a;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        #point-screen .point-actions button:active {
+            transform: scale(0.98);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        #point-screen .last-record {
+            margin-top: 20px;
+            padding: 18px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        #point-screen .last-record p {
+            margin: 5px 0;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+
+        #map {
+            height: 280px;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 25px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Nova seção para Meus Registros de Ponto detalhados na tela principal */
+        #detailed-point-records-screen {
+            /* Inherits .content-screen styles */
+        }
+
+        #detailed-point-records-screen h2 {
+            color: #2E8B57;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        #detailed-point-records-screen ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+        }
+
+        #detailed-point-records-screen li {
+            background: #f0f0f0;
+            margin-bottom: 12px;
+            padding: 18px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+
+        #detailed-point-records-screen li div {
+            flex-grow: 1;
+            text-align: left;
+            padding-right: 15px;
+        }
+
+        #detailed-point-records-screen li strong {
+            color: #333;
+            font-weight: 600;
+        }
+
+        #detailed-point-records-screen .btn-pdf {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #detailed-point-records-screen .btn-pdf:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        #detailed-point-records-screen .btn-pdf:active {
+            transform: scale(0.98);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Estilo para a caixa de cadastro de usuário (content-screen) */
+        #register-user-form {
+            /* Inherits .content-screen styles */
+        }
+
+        #register-user-form h2 {
+            margin-bottom: 25px;
+            color: #2E8B57;
+            font-size: 1.8em;
+        }
+
+        #register-user-form input,
+        #register-user-form select {
+            width: calc(100% - 20px);
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        #register-user-form button {
+            background-color: #2E8B57;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            width: calc(100% - 20px);
+            margin-top: 10px;
+        }
+
+        #register-user-form button:hover {
+            background-color: #1e603e;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        #register-user-form button:active {
+            transform: scale(0.98);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        #register-user-form button[onclick="showScreen('point-screen', document.getElementById('menu-batida'))"] {
+            background-color: #6c757d;
+        }
+
+        #register-user-form button[onclick="showScreen('point-screen', document.getElementById('menu-batida'))"]:hover {
+            background-color: #5a6268;
+        }
+
+        /* Estilos para o menu suspenso de Relatórios (ainda pode existir, mas não renderiza forms) */
+        #reports-menu {
+            margin: 10px 0 0 0;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            background-color: rgba(0, 0, 0, 0.1);
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            margin-left: 20px;
+            width: calc(100% - 40px);
+            box-sizing: border-box;
+        }
+
+        #reports-menu button {
+            background-color: #38a169;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: background-color 0.3s ease;
+        }
+
+        #reports-menu button:hover {
+            background-color: #2f855a;
+        }
+        
+        /* Estilos para a nova tela de Espelho de Ponto na área principal */
+        #mirror-report-screen {
+            /* Inherits .content-screen styles */
+        }
+
+        #mirror-report-screen h2 {
+            color: #2E8B57;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        #mirror-report-screen label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            text-align: left;
+            width: calc(100% - 20px);
+        }
+
+        #mirror-report-screen input[type="date"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            color: #333;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        #mirror-report-screen button {
+            background-color: #2E8B57;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: calc(100% - 20px);
+            margin-top: 10px;
+            transition: background-color 0.3s ease, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        #mirror-report-screen button:hover {
+            background-color: #1e603e;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+        
+        #mirror-report-screen button:active {
+            transform: scale(0.98);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Rodapé fixo na parte inferior */
+        .footer-text {
+            background-color: #1e603e;
+            color: white;
+            padding: 15px 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.95em;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        /* NEW STYLES FOR CADASTRO SCREENS */
+        .add-new-item-btn {
+            background-color: #2E8B57;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        .add-new-item-btn:hover {
+            background-color: #1e603e;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .add-new-item-btn:active {
+            transform: scale(0.95);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
+        }
+
+        .expandable-form-area {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+            transition: all 0.3s ease-in-out;
+        }
+        .expandable-form-area.active {
+            display: flex;
+        }
+
+        .expandable-form-area .form-row {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .expandable-form-area .form-group {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .expandable-form-area label {
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .expandable-form-area input[type="text"],
+        .expandable-form-area input[type="email"],
+        .expandable-form-area input[type="password"],
+        .expandable-form-area input[type="date"],
+        .expandable-form-area input[type="time"],
+        .expandable-form-area select {
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box;
+            width: 100%;
+            background-color: white;
+        }
+
+        .expandable-form-area input[type="file"] {
+            padding: 8px 0;
+            border: none;
+        }
+
+        .expandable-form-area .btn-cep-search {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: auto;
+        }
+        .expandable-form-area .btn-cep-search:hover {
+            background-color: #5a6268;
+        }
+        .expandable-form-area .full-width {
+            flex: 0 0 100%;
+        }
+
+        .expandable-form-area .btn-save {
+            background-color: #2E8B57;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .expandable-form-area .btn-save:hover {
+            background-color: #1e603e;
+            transform: translateY(-2px);
+        }
+
+        /* Estilos para o Dashboard */
+        #dashboard-screen {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 1200px;
+            text-align: center;
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            height: auto;
+            min-height: 450px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        #dashboard-screen h2 {
+            color: #2E8B57;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .welcome-message h3 {
+            color: #2E8B57;
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .welcome-message p {
+            color: #666;
+            margin: 5px 0 0;
+            font-size: 0.9em;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .quick-actions button {
+            background-color: #2E8B57;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .quick-actions button:hover {
+            background-color: #1e603e;
+        }
+
+        .dashboard-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            position: relative;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            flex: 1;
+            min-width: 200px;
+            max-width: 280px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .card h3 {
+            color: #555;
+            margin: 0 0 10px;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .card p {
+            font-size: 2em;
+            font-weight: 700;
+            margin: 0 0 10px;
+            color: #333;
+        }
+
+        .card a {
+            color: #2E8B57;
+            text-decoration: none;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .card a:hover {
+            text-decoration: underline;
+        }
+
+        /* Card color variations */
+        .card-primary { border-top: 4px solid #3182ce; }
+        .card-primary .card-icon { background-color: #3182ce; }
+        .card-primary p { color: #3182ce; }
+
+        .card-success { border-top: 4px solid #38a169; }
+        .card-success .card-icon { background-color: #38a169; }
+        .card-success p { color: #38a169; }
+
+        .card-warning { border-top: 4px solid #d69e2e; }
+        .card-warning .card-icon { background-color: #d69e2e; }
+        .card-warning p { color: #d69e2e; }
+
+        .card-danger { border-top: 4px solid #e53e3e; }
+        .card-danger .card-icon { background-color: #e53e3e; }
+        .card-danger p { color: #e53e3e; }
+
+        .card-info { border-top: 4px solid #00b5d8; }
+        .card-info .card-icon { background-color: #00b5d8; }
+        .card-info p { color: #00b5d8; }
+
+        .card-secondary { border-top: 4px solid #805ad5; }
+        .card-secondary .card-icon { background-color: #805ad5; }
+        .card-secondary p { color: #805ad5; }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .chart-header h3 {
+            margin: 0;
+            color: #2E8B57;
+        }
+
+        .chart-header select {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .dashboard-charts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .chart-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chart-container.full-width {
+            max-width: 100%;
+        }
+
+        .recent-records {
+            margin-top: 15px;
+        }
+
+        .record-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .record-details {
+            flex-grow: 1;
+            margin-left: 10px;
+        }
+
+        .record-name {
+            display: block;
+            font-weight: 500;
+        }
+
+        .record-time {
+            display: block;
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .record-status {
+            font-size: 0.8em;
+            padding: 3px 8px;
+            border-radius: 12px;
+            background-color: #eee;
+        }
+
+        .record-status.on-time {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+
+        .record-status.late {
+            background-color: #feebc8;
+            color: #9c4221;
+        }
+
+        .record-status.absent {
+            background-color: #fed7d7;
+            color: #9b2c2c;
+        }
+
+        /* Estilo para o item do Dashboard no sidebar */
+        #dashboard-menu-section {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #dashboard-menu-section .menu-item {
+            margin: 0 10px;
+            border-radius: 5px;
+            padding: 12px 20px;
+        }
+
+        #dashboard-menu-section .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        #dashboard-menu-section .menu-item.active {
+            background-color: #c6f6d5;
+            color: #2e8b57;
+            font-weight: bold;
+            border-left: 5px solid #2E8B57;
+            padding-left: 15px;
+        }
+
+        /* Estilos para upload de arquivos */
+        .form-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .form-upload .preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 10px;
+            border: 2px dashed #ccc;
+        }
+        
+        .form-upload .preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        
+        .form-upload .upload-btn {
+            background-color: #38a169;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .form-upload .upload-btn:hover {
+            background-color: #2f855a;
+        }
+        
+        .form-upload input[type="file"] {
+            display: none;
+        }
+        
+        .cep-search-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .cep-search-container input {
+            flex: 1;
+        }
+        
+        .cep-search-container button {
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 0 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .cep-search-container button:hover {
+            background-color: #2c5282;
+        }
+
+        /* Máscaras para campos */
+        .masked-input {
+            position: relative;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            #main-header {
+                padding: 10px 15px;
+                height: auto;
+            }
+            #main-header .user-info {
+                font-size: 1em;
+            }
+            #main-header .user-info .material-icons {
+                font-size: 1.5em;
+            }
+            #main-header button.logout-btn {
+                padding: 6px 10px;
+                font-size: 0.8em;
+            }
+
+            #content-area-wrapper {
+                flex-direction: column;
+            }
+            #sidebar {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                justify-content: space-around;
+                padding: 10px 0;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                position: relative;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .sidebar-header, .menu-section-title {
+                display: none;
+            }
+            .sidebar-nav {
+                display: flex;
+                width: 100%;
+                justify-content: space-around;
+            }
+            .sidebar-nav ul {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                justify-content: space-around;
+            }
+            .sidebar-nav ul li {
+                margin-bottom: 0;
+            }
+            .menu-item {
+                flex-direction: column;
+                font-size: 0.8em;
+                padding: 8px 5px;
+                margin: 0 5px;
+                text-align: center;
+                border-left: none !important;
+                border-bottom: 3px solid transparent;
+            }
+            .menu-item .material-icons {
+                margin-right: 0;
+                margin-bottom: 5px;
+                font-size: 1.8em;
+            }
+            .menu-item.active {
+                border-bottom-color: #2E8B57;
+                padding-bottom: 5px;
+            }
+            #reports-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: #2f855a;
+                padding: 10px 20px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                border-radius: 0;
+                margin-left: 0;
+            }
+
+            #main-content-area {
+                padding: 15px;
+                height: calc(100vh - 120px - 50px); /* Ajuste para mobile */
+            }
+            .content-screen {
+                width: 95%;
+                padding: 20px;
+            }
+            #point-screen .current-time {
+                font-size: 2em;
+            }
+            #point-screen .point-actions button {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+            .expandable-form-area .form-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .expandable-form-area .form-group {
+                min-width: unset;
+            }
+
+            /* Dashboard responsive */
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .quick-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .quick-actions button {
+                width: 100%;
+            }
+            
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .chart-header select {
+                width: 100%;
+            }
+            
+            .dashboard-cards .card {
+                min-width: 150px;
+                padding: 15px;
+            }
+            .dashboard-cards .card h3 {
+                font-size: 1em;
+            }
+            .dashboard-cards .card p {
+                font-size: 1.8em;
+            }
+            .dashboard-charts .chart-container {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="login-screen">
+<div class="login-box">
+<img alt="Logo Kaely Certificadora" class="logo" src="kaelylogo.png"/>
+<div class="input-group">
+<input id="usuario" placeholder="Usuário" type="text"/>
+<span class="material-icons user-icon">person</span>
+</div>
+<div class="input-group">
+<input id="senha" placeholder="Senha" type="password"/>
+<span class="material-icons password-toggle" onclick="togglePasswordVisibility()">visibility_off</span>
+</div>
+<button onclick="logar()">Entrar</button>
+<div class="error-message" id="error-message"></div>
+<a class="forgot-password-link" href="#" onclick="esqueceuSenha()">Esqueceu a senha?</a>
+</div>
+</div>
+<div id="app-wrapper">
+<header id="main-header">
+<div class="user-info">
+<span class="material-icons">person</span>
+                Olá, <span id="loggedInUsernameDisplay"></span>!
+            </div>
+<button class="logout-btn" onclick="logout()">
+<span class="material-icons">exit_to_app</span> Sair
+            </button>
+</header>
+<div id="content-area-wrapper">
+<div id="sidebar">
+<div class="sidebar-header">
+<img alt="Kaely Ponto Logo" src="kaelylogo.png"/>
+</div>
+<!-- Menu principal (visível apenas para usuários comuns) -->
+<div class="menu-section" id="user-menu-section">
+<div class="menu-section-title">Menu</div>
+<ul class="sidebar-nav">
+<li>
+<a class="menu-item active" href="#" id="menu-batida" onclick="showScreen('point-screen', this)">
+<span class="material-icons">watch_later</span> Batida de Ponto
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-registros" onclick="showScreen('detailed-point-records-screen', this)">
+<span class="material-icons">assignment</span> Meus Registros
+                            </a>
+</li>
+<li><a class="menu-item active" href="#" id="menu-batida" onclick="showScreen('point-screen', this)"><span class="material-icons">fingerprint</span> Batida de Ponto</a></li><li><a class="menu-item" href="#" id="menu-registros" onclick="showScreen('detailed-point-records-screen', this)"><span class="material-icons">history</span> Meus Registros</a></li><li class="menu-section-title">Cadastros</li><li><a class="menu-item" href="#" id="menu-cadastro-usuario" onclick="showScreen('register-user-form', this)"><span class="material-icons">person_add</span> Usuários</a></li><li id="menu-empresas-item"><a class="menu-item" href="#" id="menu-cadastro-empresa" onclick="showScreen('company-management-screen', this)"><span class="material-icons">business</span> Empresas</a></li><li><a class="menu-item" href="#" id="menu-cadastro-departamento" onclick="showScreen('register-department-form', this)"><span class="material-icons">apartment</span> Departamentos</a></li><li><a class="menu-item" href="#" id="menu-cadastro-cargo" onclick="showScreen('register-position-form', this)"><span class="material-icons">work</span> Cargos</a></li><li><a class="menu-item" href="#" id="menu-cadastro-jornada" onclick="showScreen('register-workday-form', this)"><span class="material-icons">schedule</span> Jornadas</a></li><li><a class="menu-item" href="#" id="menu-cadastro-feriado" onclick="showScreen('register-holiday-form', this)"><span class="material-icons">calendar_today</span> Feriados</a></li><li><a class="menu-item" href="#" id="menu-cadastro-justificativa" onclick="showScreen('register-justification-form', this)"><span class="material-icons">description</span> Justificativas</a></li><li><a class="menu-item" href="#" id="menu-cadastro-relatorio" onclick="showScreen('report-screen', this)"><span class="material-icons">bar_chart</span> Relatórios</a></li></ul>
+</div>
+<!-- Dashboard como item independente -->
+<div class="menu-section" id="dashboard-menu-section" style="display: none;">
+<a class="menu-item" href="#" id="menu-dashboard" onclick="showScreen('dashboard-screen', this)">
+<span class="material-icons">dashboard</span> Dashboard
+                    </a>
+</div>
+<!-- Seção de Cadastro (visível apenas para administradores) -->
+<div class="menu-section" id="cadastro-menu-section" style="display: none;">
+<div class="menu-section-title cadastro-header" onclick="toggleCadastroMenu()">
+<span class="material-icons">folder</span>
+<span>Cadastros</span>
+<span class="cadastro-arrow" id="cadastro-arrow">▼</span>
+</div>
+<ul class="sidebar-nav" id="cadastro-menu-items" style="display: none;">
+<li>
+<a class="menu-item" href="#" id="menu-cadastrar-usuario" onclick="showScreen('register-user-form', this)">
+<span class="material-icons">person_add</span> Usuário
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-empresa" onclick="showScreen('company-management-screen', this)">
+<span class="material-icons">business</span> Empresa
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-horarios" onclick="showScreen('schedules-management-screen', this)">
+<span class="material-icons">schedule</span> Horários
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-cargo" onclick="showScreen('roles-management-screen', this)">
+<span class="material-icons">work</span> Cargo
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-departamento" onclick="showScreen('departments-management-screen', this)">
+<span class="material-icons">group</span> Departamento
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-feriado" onclick="showScreen('holidays-management-screen', this)">
+<span class="material-icons">date_range</span> Feriado
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-justificativa" onclick="showScreen('justifications-management-screen', this)">
+<span class="material-icons">description</span> Justificativa
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-afastamento" onclick="showScreen('absences-management-screen', this)">
+<span class="material-icons">sick</span> Afastamento
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-banco-horas" onclick="showScreen('bank-hours-management-screen', this)">
+<span class="material-icons">access_time</span> Banco de Horas
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-banco-compensacao" onclick="showScreen('compensation-bank-management-screen', this)">
+<span class="material-icons">paid</span> Banco de Compensação
+                            </a>
+</li>
+<li>
+<a class="menu-item" href="#" id="menu-local-trabalho" onclick="showScreen('work-location-management-screen', this)">
+<span class="material-icons">location_on</span> Local de Trabalho
+                            </a>
+</li>
+</ul>
+</div>
+<!-- Seção de Relatórios (sem o Dashboard) -->
+<div class="menu-section" id="admin-menu-section" style="display: none;">
+<div class="menu-section-title cadastro-header" onclick="toggleReportsMenu()">
+<span class="material-icons">assessment</span>
+<span>Relatórios</span>
+<span class="cadastro-arrow" id="reports-arrow">▼</span>
+</div>
+<ul class="sidebar-nav" id="reports-menu-items" style="display: none;">
+<li>
+<a class="menu-item" href="#" id="menu-relatorios" onclick="showScreen('mirror-report-screen', this)">
+<span class="material-icons">picture_as_pdf</span> Espelho de Ponto
+                            </a>
+</li>
+</ul>
+</div>
+</div>
+<div id="main-content-area">
+<!-- Tela de Ponto -->
+<div class="content-screen" id="point-screen">
+<div class="current-time" id="current-time"></div>
+<div class="point-actions">
+<button onclick="handlePonto('ENTRADA')">Registrar Entrada</button>
+<button onclick="handlePonto('SAIDA')">Registrar Saída</button>
+<button onclick="handlePonto('INICIO_INTERVALO')">Início Intervalo</button>
+<button onclick="handlePonto('FIM_INTERVALO')">Fim Intervalo</button>
+</div>
+<div class="last-record">
+<p>Último registro: <span id="last-record-type">[Nenhum registro ainda]</span></p>
+<p>Horário: <span id="last-record-time">--:--:--</span></p>
+<p>Data: <span id="last-record-date">--/--/----</span></p>
+</div>
+<div id="map"></div>
+</div>
+<!-- Tela de Registros Detalhados -->
+<div class="content-screen" id="detailed-point-records-screen">
+<h2>Meus Registros de Ponto</h2>
+<ul id="point-records-list-main">
+<li>Carregando registros...</li>
+</ul>
+</div>
+<!-- Tela de Cadastro de Usuário - MODIFICADA -->
+<div class="content-screen" id="register-user-form">
+<h2>Cadastrar Novo Usuário</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-user-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-user-form-area">
+<div class="form-upload">
+<div class="preview" id="user-photo-preview">
+<span class="material-icons">person</span>
+</div>
+<label class="upload-btn">
+<span class="material-icons">photo_camera</span> Adicionar Foto
+                                <input accept="image/*" id="user-photo" onchange="previewUserPhoto(event)" type="file"/>
+</label>
+</div>
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newFullName">Nome Completo*</label>
+<input id="newFullName" required="" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="userGender">Sexo*</label>
+<select id="userGender" required="">
+<option value="MALE">Masculino</option>
+<option value="FEMALE">Feminino</option>
+<option value="OTHER">Outro</option>
+</select>
+</div>
+<div class="form-group masked-input" data-mask="000.000.000-00">
+<label for="newCPF">CPF*</label>
+<input id="newCPF" required="" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group masked-input" data-mask="000.00000.00-0">
+<label for="userPis">PIS*</label>
+<input id="userPis" required="" type="text"/>
+</div>
+<div class="form-group">
+<label for="userStatus">Situação do Cadastro*</label>
+<select id="userStatus" required="">
+<option value="ACTIVE">Ativo</option>
+<option value="INACTIVE">Inativo</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newCompany">Empresa*</label>
+<select id="newCompany" required="">
+<option value="">Selecione uma empresa</option>
+<!-- Opções serão preenchidas dinamicamente -->
+</select>
+</div>
+<div class="form-group">
+<label for="employeeType">Tipo de Funcionário*</label>
+<select id="employeeType" required="">
+<option value="EMPLOYEE">Contratado</option>
+<option value="INTERN">Estagiário</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="hireDate">Data de Admissão*</label>
+<input id="hireDate" required="" type="date"/>
+</div>
+<div class="form-group">
+<label for="terminationDate">Data de Demissão</label>
+<input id="terminationDate" type="date"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newEmployeeId">Matrícula*</label>
+<input id="newEmployeeId" required="" type="text"/>
+</div>
+<div class="form-group">
+<label for="userSchedule">Horário*</label>
+<select id="userSchedule" required="">
+<option value="">Selecione um horário</option>
+<!-- Opções serão preenchidas dinamicamente -->
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="userDepartment">Departamento*</label>
+<select id="userDepartment" required="">
+<option value="">Selecione um departamento</option>
+<!-- Opções serão preenchidas dinamicamente -->
+</select>
+</div>
+<div class="form-group">
+<label for="userRole">Cargo*</label>
+<select id="userRole" required="">
+<option value="">Selecione um cargo</option>
+<!-- Opções serão preenchidas dinamicamente -->
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newUsername">Usuário (para login)*</label>
+<input id="newUsername" required="" type="text"/>
+</div>
+<div class="form-group">
+<label for="newPassword">Senha*</label>
+<input id="newPassword" required="" type="password"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newUserRole">Nível de Acesso*</label>
+<select id="newUserRole" required="">
+<option value="USER">Usuário Comum</option>
+<option value="ADMIN">Administrador</option>
+</select>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewUser()">Salvar Usuário</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-user-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+</div>
+<!-- Tela de Espelho de Ponto -->
+<div class="content-screen" id="mirror-report-screen">
+<h2>Gerar Espelho de Ponto</h2>
+<label for="mirrorStartDate">Data Inicial:</label>
+<input id="mirrorStartDate" type="date"/>
+<label for="mirrorEndDate">Data Final:</label>
+<input id="mirrorEndDate" type="date"/>
+<button onclick="generateMirrorReportPdf()">Gerar e Baixar PDF</button>
+</div>
+<!-- Tela de Cadastro de Empresa - MODIFICADA -->
+<div class="content-screen" id="company-management-screen">
+<h2>Gerenciamento de Empresas</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-company-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-company-form-area">
+<div class="form-upload">
+<div class="preview" id="company-logo-preview">
+<span class="material-icons">business</span>
+</div>
+<label class="upload-btn">
+<span class="material-icons">photo_camera</span> Adicionar Logo
+                                <input accept="image/*" id="company-logo" onchange="previewCompanyLogo(event)" type="file"/>
+</label>
+</div>
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newCompanyName">Nome da Empresa*</label>
+<input id="newCompanyName" required="" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="documentType">Tipo de Documento*</label>
+<select id="documentType" onchange="updateDocumentMask()">
+<option value="CNPJ">CNPJ</option>
+<option value="CPF">CPF</option>
+</select>
+</div>
+<div class="form-group masked-input" data-mask="00.000.000/0000-00">
+<label for="newCompanyDocument">N
+úmero do Documento*</label>
+<input id="newCompanyDocument" required="" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="companyStatus">Situa
+ção da Empresa*</label>
+<select id="companyStatus" required="">
+<option value="ACTIVE">Ativa</option>
+<option value="INACTIVE">Inativa</option>
+</select>
+</div>
+</div>
+<h3 style="margin: 20px 0 10px; color: #2E8B57;">Endere
+ço</h3>
+<div class="form-row">
+<div class="form-group">
+<label for="companyCep">CEP*</label>
+<div class="cep-search-container">
+<input id="companyCep" required="" type="text"/>
+<button onclick="searchCep('company')" type="button">
+<span class="material-icons">search</span>
+</button>
+</div>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="companyAddress">Endere
+ço*</label>
+<input id="companyAddress" required="" type="text"/>
+</div>
+<div class="form-group">
+<label for="companyNumber">N
+úmero*</label>
+<input id="companyNumber" required="" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="companyComplement">Complemento</label>
+<input id="companyComplement" type="text"/>
+</div>
+<div class="form-group">
+<label for="companyDistrict">Bairro*</label>
+<input id="companyDistrict" required="" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="companyCity">Cidade*</label>
+<input id="companyCity" required="" type="text"/>
+</div>
+<div class="form-group">
+<label for="companyState">Estado*</label>
+<input id="companyState" required="" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="companyCountry">Pa
+ís*</label>
+<input id="companyCountry" readonly="" type="text" value="Brasil"/>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewCompany()">Salvar Empresa</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-company-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+
+<script>
+        async function carregarEmpresas() {
+            try {
+                const response = await fetch("http://localhost:3000/companies");
+                const empresas = await response.json();
+
+                const tbody = document.getElementById("companies-tbody");
+                tbody.innerHTML = "";
+
+                if (empresas.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='4'>Nenhuma empresa cadastrada.</td></tr>";
+                    return;
+                }
+
+                empresas.forEach(empresa => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${empresa.nome}</td>
+                        <td>${empresa.cnpj}</td>
+                        <td><span class="status-badge ${empresa.ativo ? 'active' : 'inactive'}">
+                            ${empresa.ativo ? 'Ativa' : 'Inativa'}
+                        </span></td>
+                        <td>
+                            <button class="btn-action" onclick="editarEmpresa(${empresa.id})">✏️</button>
+                            <button class="btn-action" onclick="deletarEmpresa(${empresa.id})">🗑️</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Erro ao carregar empresas:", error);
+                const tbody = document.getElementById("companies-tbody");
+                tbody.innerHTML = "<tr><td colspan='4'>Erro ao carregar empresas.</td></tr>";
+            }
+        }
+
+        function editarEmpresa(id) {
+            alert("Função de editar ainda não implementada. ID: " + id);
+        }
+
+        function deletarEmpresa(id) {
+            alert("Função de deletar ainda não implementada. ID: " + id);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const empresaMenuItem = document.getElementById("menu-empresa");
+            if (empresaMenuItem) {
+                empresaMenuItem.addEventListener("click", () => {
+                    setTimeout(() => carregarEmpresas(), 300);
+                });
+            }
+        });
+    </script>
+
+<div id="company-listing-section">
+<h3>Empresas Cadastradas</h3>
+<div class="table-responsive">
+<table id="companies-table">
+<thead>
+<tr>
+<th>Nome</th>
+<th>CNPJ</th>
+<th>Status</th>
+<th>Ações</th>
+</tr>
+</thead>
+<tbody id="companies-tbody">
+<tr><td colspan="4">Carregando empresas...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<style>
+    #company-listing-section h3 {
+        color: #2E8B57;
+        margin-bottom: 15px;
+    }
+    #companies-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    #companies-table th, #companies-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+    }
+    #companies-table th {
+        background-color: #2E8B57;
+        color: white;
+        font-weight: 600;
+    }
+    #companies-table tr:hover {
+        background-color: #f9f9f9;
+    }
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+    .status-badge.active {
+        background-color: #c6f6d5;
+        color: #22543d;
+    }
+    .status-badge.inactive {
+        background-color: #fed7d7;
+        color: #9b2c2c;
+    }
+    .btn-action {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+        color: #2E8B57;
+        margin-right: 5px;
+    }
+    .btn-action:hover {
+        color: #1e603e;
+    }
+</style>
+<script>
+    async function carregarEmpresas() {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch("http://localhost:3000/companies", {
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+            const empresas = await response.json();
+
+            const tbody = document.getElementById("companies-tbody");
+            tbody.innerHTML = "";
+
+            if (!Array.isArray(empresas) || empresas.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='4'>Nenhuma empresa cadastrada.</td></tr>";
+                return;
+            }
+
+            empresas.forEach(empresa => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${empresa.nome}</td>
+                    <td>${empresa.cnpj}</td>
+                    <td><span class="status-badge ${empresa.ativo ? 'active' : 'inactive'}">
+                        ${empresa.ativo ? 'Ativa' : 'Inativa'}
+                    </span></td>
+                    <td>
+                        <button class="btn-action" onclick="editarEmpresa(${empresa.id})">✏️</button>
+                        <button class="btn-action" onclick="deletarEmpresa(${empresa.id})">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error("Erro ao carregar empresas:", error);
+            const tbody = document.getElementById("companies-tbody");
+            tbody.innerHTML = "<tr><td colspan='4'>Erro ao carregar empresas.</td></tr>";
+        }
+    }
+
+    function editarEmpresa(id) {
+        alert("Função de editar ainda não implementada. ID: " + id);
+    }
+
+    function deletarEmpresa(id) {
+        alert("Função de deletar ainda não implementada. ID: " + id);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const empresaMenuItem = document.getElementById("menu-empresa");
+        if (empresaMenuItem) {
+            empresaMenuItem.addEventListener("click", () => {
+                setTimeout(() => carregarEmpresas(), 300);
+            });
+        }
+    });
+</script>
+</div>
+<!-- Tela de Cadastro de Horários -->
+<div class="content-screen" id="schedules-management-screen">
+<h2>Gerenciamento de Horários</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-schedule-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-schedule-form-area">
+<div class="form-row">
+<div class="form-group">
+<label for="newScheduleName">Nome do Horário:</label>
+<input id="newScheduleName" type="text"/>
+</div>
+<div class="form-group">
+<label for="newScheduleType">Tipo:</label>
+<select id="newScheduleType">
+<option value="FIXED">Fixo</option>
+<option value="FLEXIBLE">Flexível</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newScheduleStart">Hora de Entrada:</label>
+<input id="newScheduleStart" type="time"/>
+</div>
+<div class="form-group">
+<label for="newScheduleEnd">Hora de Saída:</label>
+<input id="newScheduleEnd" type="time"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newScheduleBreakStart">Início do Intervalo:</label>
+<input id="newScheduleBreakStart" type="time"/>
+</div>
+<div class="form-group">
+<label for="newScheduleBreakEnd">Fim do Intervalo:</label>
+<input id="newScheduleBreakEnd" type="time"/>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewSchedule()">Salvar Horário</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-schedule-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+</div>
+<!-- Tela de Cadastro de Cargos -->
+<div class="content-screen" id="roles-management-screen">
+<h2>Gerenciamento de Cargos</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-role-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-role-form-area">
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newRoleName">Nome do Cargo:</label>
+<input id="newRoleName" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newRoleDepartment">Departamento:</label>
+<select id="newRoleDepartment">
+<option value="TI">TI</option>
+<option value="RH">RH</option>
+<option value="Financeiro">Financeiro</option>
+</select>
+</div>
+<div class="form-group">
+<label for="newRoleSalary">Salário Base:</label>
+<input id="newRoleSalary" type="text"/>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewRole()">Salvar Cargo</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-role-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+</div>
+<!-- Tela de Cadastro de Departamentos -->
+<div class="content-screen" id="departments-management-screen">
+<h2>Gerenciamento de Departamentos</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-department-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-department-form-area">
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newDepartmentName">Nome do Departamento:</label>
+<input id="newDepartmentName" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newDepartmentManager">Gerente Responsável:</label>
+<input id="newDepartmentManager" type="text"/>
+</div>
+<div class="form-group">
+<label for="newDepartmentLocation">Localização:</label>
+<input id="newDepartmentLocation" type="text"/>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewDepartment()">Salvar Departamento</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-department-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+</div>
+<!-- Tela de Cadastro de Feriados -->
+<div class="content-screen" id="holidays-management-screen">
+<h2>Gerenciamento de Feriados</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-holiday-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-holiday-form-area">
+<div class="form-row">
+<div class="form-group">
+<label for="newHolidayName">Nome do Feriado:</label>
+<input id="newHolidayName" type="text"/>
+</div>
+<div class="form-group">
+<label for="newHolidayDate">Data:</label>
+<input id="newHolidayDate" type="date"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newHolidayDescription">Descrição:</label>
+<input id="newHolidayDescription" type="text"/>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewHoliday()">Salvar Feriado</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-holiday-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+</div>
+<!-- Tela de Cadastro de Justificativas -->
+<div class="content-screen" id="justifications-management-screen">
+<h2>Gerenciamento de Justificativas</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-justification-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-justification-form-area">
+<div class="form-row">
+<div class="form-group">
+<label for="newJustificationEmployee">Funcionário:</label>
+<select id="newJustificationEmployee">
+<!-- Opções serão preenchidas dinamicamente -->
+</select>
+</div>
+<div class="form-group">
+<label for="newJustificationDate">Data:</label>
+<input id="newJustificationDate" type="date"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newJustificationReason">Motivo:</label>
+<select id="newJustificationReason">
+<option value="SAUDE">Problemas de Saúde</option>
+<option value="FAMILIA">Problemas Familiares</option>
+<option value="TRANSPORTE">Problemas de Transporte</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newJustificationDetails">Detalhes:</label>
+<textarea id="newJustificationDetails" rows="3"></textarea>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewJustification()">Salvar Justificativa</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-justification-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+</div>
+<!-- Tela de Cadastro de Afastamentos -->
+<div class="content-screen" id="absences-management-screen">
+<h2>Gerenciamento de Afastamentos</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-absence-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-absence-form-area">
+<div class="form-row">
+<div class="form-group">
+<label for="newAbsenceEmployee">Funcionário:</label>
+<select id="newAbsenceEmployee">
+<!-- Opções serão preenchidas dinamicamente -->
+</select>
+</div>
+<div class="form-group">
+<label for="newAbsenceType">Tipo:</label>
+<select id="newAbsenceType">
+<option value="MEDICAL">Médico</option>
+<option value="MATERNITY">Maternidade</option>
+<option value="VACATION">Férias</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newAbsenceStart">Data Início:</label>
+<input id="newAbsenceStart" type="date"/>
+</div>
+<div class="form-group">
+<label for="newAbsenceEnd">Data Fim:</label>
+<input id="newAbsenceEnd" type="date"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newAbsenceReason">Motivo:</label>
+<textarea id="newAbsenceReason" rows="3"></textarea>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewAbsence()">Salvar Afastamento</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-absence-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+</div>
+<!-- Tela de Cadastro de Banco de Horas -->
+<div class="content-screen" id="bank-hours-management-screen">
+<h2>Gerenciamento de Banco de Horas</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-bank-hours-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-bank-hours-form-area">
+<div class="form-row">
+<div class="form-group">
+<label for="newBankHoursEmployee">Funcionário:</label>
+<select id="newBankHoursEmployee">
+<!-- Opções serão preenchidas dinamicamente -->
+</select>
+</div>
+<div class="form-group">
+<label for="newBankHoursDate">Data:</label>
+<input id="newBankHoursDate" type="date"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newBankHoursType">Tipo:</label>
+<select id="newBankHoursType">
+<option value="EXTRA">Hora Extra</option>
+<option value="DEBIT">Débito</option>
+</select>
+</div>
+<div class="form-group">
+<label for="newBankHoursAmount">Quantidade (horas):</label>
+<input id="newBankHoursAmount" step="0.5" type="number"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newBankHoursReason">Motivo:</label>
+<textarea id="newBankHoursReason" rows="3"></textarea>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewBankHours()">Salvar Banco de Horas</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-bank-hours-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+</div>
+<!-- Tela de Cadastro de Banco de Compensação -->
+<div class="content-screen" id="compensation-bank-management-screen">
+<h2>Gerenciamento de Banco de Compensação</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-compensation-bank-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-compensation-bank-form-area">
+<div class="form-row">
+<div class="form-group">
+<label for="newCompensationBankEmployee">Funcionário:</label>
+<select id="newCompensationBankEmployee">
+<!-- Opções serão preenchidas dinamicamente -->
+</select>
+</div>
+<div class="form-group">
+<label for="newCompensationBankDate">Data:</label>
+<input id="newCompensationBankDate" type="date"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newCompensationBankType">Tipo:</label>
+<select id="newCompensationBankType">
+<option value="CREDIT">Crédito</option>
+<option value="DEBIT">Débito</option>
+</select>
+</div>
+<div class="form-group">
+<label for="newCompensationBankAmount">Valor:</label>
+<input id="newCompensationBankAmount" step="0.01" type="number"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newCompensationBankReason">Motivo:</label>
+<textarea id="newCompensationBankReason" rows="3"></textarea>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewCompensationBank()">Salvar Compensação</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-compensation-bank-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+</div>
+<!-- Tela de Cadastro de Local de Trabalho -->
+<div class="content-screen" id="work-location-management-screen">
+<h2>Gerenciamento de Locais de Trabalho</h2>
+<div class="add-new-item-btn" onclick="toggleFormVisibility('add-work-location-form-area')">
+<span class="material-icons">add</span>
+</div>
+<div class="expandable-form-area" id="add-work-location-form-area">
+<div class="form-row">
+<div class="form-group full-width">
+<label for="newWorkLocationName">Nome do Local:</label>
+<input id="newWorkLocationName" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newWorkLocationAddress">Endereço:</label>
+<input id="newWorkLocationAddress" type="text"/>
+</div>
+<div class="form-group">
+<label for="newWorkLocationRadius">Raio (metros):</label>
+<input id="newWorkLocationRadius" type="number"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="newWorkLocationLatitude">Latitude:</label>
+<input id="newWorkLocationLatitude" type="text"/>
+</div>
+<div class="form-group">
+<label for="newWorkLocationLongitude">Longitude:</label>
+<input id="newWorkLocationLongitude" type="text"/>
+</div>
+</div>
+<button class="btn-save" onclick="registerNewWorkLocation()">Salvar Local</button>
+<button class="btn-save" onclick="toggleFormVisibility('add-work-location-form-area')" style="background-color: #dc3545;">Cancelar</button>
+</div>
+</div>
+<!-- Dashboard Screen -->
+<div class="content-screen" id="dashboard-screen">
+<h2>Dashboard Administrativo</h2>
+<div class="dashboard-header">
+<div class="welcome-message">
+<h3>Bem-vindo, <span id="dashboard-username"></span>!</h3>
+<p>Último acesso: <span id="last-access-time"></span></p>
+</div>
+<div class="quick-actions">
+<button onclick="showScreen('register-user-form', document.getElementById('menu-cadastrar-usuario'))">
+<span class="material-icons">person_add</span> Novo Usuário
+                            </button>
+<button onclick="showScreen('mirror-report-screen', document.getElementById('menu-relatorios'))">
+<span class="material-icons">picture_as_pdf</span> Gerar Relatório
+                            </button>
+</div>
+</div>
+<div class="dashboard-cards">
+<div class="card card-primary">
+<div class="card-icon">
+<span class="material-icons">groups</span>
+</div>
+<h3>Total de Funcionários</h3>
+<p id="total-employees-count">--</p>
+<a href="#" onclick="showScreen('register-user-form', document.getElementById('menu-cadastrar-usuario'))">Ver todos</a>
+</div>
+<div class="card card-success">
+<div class="card-icon">
+<span class="material-icons">check_circle</span>
+</div>
+<h3>Presentes Hoje</h3>
+<p id="present-today-count">--</p>
+<a href="#" onclick="showScreen('detailed-point-records-screen', document.getElementById('menu-registros'))">Detalhes</a>
+</div>
+<div class="card card-warning">
+<div class="card-icon">
+<span class="material-icons">watch_later</span>
+</div>
+<h3>Atrasados Hoje</h3>
+<p id="late-today-count">--</p>
+<a href="#" onclick="showScreen('detailed-point-records-screen', document.getElementById('menu-registros'))">Detalhes</a>
+</div>
+<div class="card card-danger">
+<div class="card-icon">
+<span class="material-icons">cancel</span>
+</div>
+<h3>Ausentes Hoje</h3>
+<p id="absent-today-count">--</p>
+<a href="#" onclick="showScreen('justifications-management-screen', document.getElementById('menu-justificativa'))">Justificativas</a>
+</div>
+<div class="card card-info">
+<div class="card-icon">
+<span class="material-icons">access_time</span>
+</div>
+<h3>Horas Extras</h3>
+<p id="overtime-count">--</p>
+<a href="#" onclick="showScreen('bank-hours-management-screen', document.getElementById('menu-banco-horas'))">Banco de Horas</a>
+</div>
+<div class="card card-secondary">
+<div class="card-icon">
+<span class="material-icons">date_range</span>
+</div>
+<h3>Feriados este Mês</h3>
+<p id="holidays-this-month">--</p>
+<a href="#" onclick="showScreen('holidays-management-screen', document.getElementById('menu-feriado'))">Calendário</a>
+</div>
+</div>
+<div class="dashboard-charts">
+<div class="chart-container">
+<div class="chart-header">
+<h3>Status de Presença Hoje</h3>
+<select id="presence-chart-filter" onchange="updatePresenceChart()">
+<option value="today">Hoje</option>
+<option value="week">Esta Semana</option>
+<option value="month">Este Mês</option>
+</select>
+</div>
+<canvas id="presence-status-chart"></canvas>
+</div>
+<div class="chart-container">
+<div class="chart-header">
+<h3>Horas Trabalhadas</h3>
+<select id="hours-chart-filter" onchange="updateHoursChart()">
+<option value="week">Últimos 7 dias</option>
+<option value="month">Últimos 30 dias</option>
+</select>
+</div>
+<canvas id="weekly-hours-chart"></canvas>
+</div>
+<div class="chart-container full-width">
+<div class="chart-header">
+<h3>Registros Recentes</h3>
+<a href="#" onclick="showScreen('detailed-point-records-screen', document.getElementById('menu-registros'))">Ver todos</a>
+</div>
+<div class="recent-records" id="recent-records-container">
+<div class="record-item">
+<span class="material-icons">person</span>
+<div class="record-details">
+<span class="record-name">Carregando...</span>
+<span class="record-time">Por favor aguarde</span>
+</div>
+<span class="record-status on-time">No horário</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="content-screen" id="view-companies-screen">
+<h2>Empresas Cadastradas</h2>
+<button class="btn-list" onclick="showScreen('company-management-screen', this)" type="button">
+<span class="material-icons">arrow_back</span> Voltar para Cadastro
+                    </button>
+<div class="filter-controls">
+<input id="company-search" oninput="filterCompanies()" placeholder="Pesquisar empresas..." type="text"/>
+</div>
+<div class="table-responsive">
+<table id="companies-table">
+<thead>
+<tr>
+<th>Nome</th>
+<th>CNPJ/CPF</th>
+<th>Status</th>
+<th>Ações</th>
+</tr>
+</thead>
+<tbody id="companies-list">
+<tr>
+<td colspan="4">Carregando empresas...</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div><div class="content-screen" id="register-department-form">
+<h2>Cadastro de Departamento</h2>
+<p>Conteúdo para cadastro de departamento.</p>
+</div><div class="content-screen" id="register-position-form">
+<h2>Cadastro de Cargo</h2>
+<p>Conteúdo para cadastro de cargo.</p>
+</div><div class="content-screen" id="register-workday-form">
+<h2>Cadastro de Jornada</h2>
+<p>Conteúdo para cadastro de jornada.</p>
+</div><div class="content-screen" id="register-holiday-form">
+<h2>Cadastro de Feriado</h2>
+<p>Conteúdo para cadastro de feriado.</p>
+</div><div class="content-screen" id="register-justification-form">
+<h2>Cadastro de Justificativa</h2>
+<p>Conteúdo para cadastro de justificativa.</p>
+</div><div class="content-screen" id="report-screen">
+<h2>Relatórios</h2>
+<p>Conteúdo para relatórios.</p>
+</div></div>
+</div>
+<div class="footer-text">© Kaely Certificadora - Sistema de Ponto Eletrônico</div>
+</div>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+        const API_BASE_URL = 'http://localhost:3000';
+
+        let accessToken = localStorage.getItem('accessToken');
+        let loggedInUserId = null;
+        let loggedInUsername = null;
+        let loggedInUserRole = null;
+        let map = null;
+        let marker = null;
+        let currentLatitude = null;
+        let currentLongitude = null;
+        let updateTimeInterval = null;
+        let presenceChart = null;
+        let weeklyChart = null;
+
+        // Elementos do DOM
+        const loginScreen = document.getElementById("login-screen");
+        const appWrapper = document.getElementById("app-wrapper");
+        const usuarioInput = document.getElementById("usuario");
+        const senhaInput = document.getElementById("senha");
+        const loggedInUsernameDisplay = document.getElementById('loggedInUsernameDisplay');
+        const errorMessageDiv = document.getElementById('error-message');
+        const currentTimeDiv = document.getElementById('current-time');
+        const lastRecordTypeSpan = document.getElementById('last-record-type');
+        const lastRecordTimeSpan = document.getElementById('last-record-time');
+        const lastRecordDateSpan = document.getElementById('last-record-date');
+        const sidebar = document.getElementById('sidebar');
+        const pointRecordsListMain = document.getElementById('point-records-list-main');
+        
+        // Elementos do Dashboard
+        const dashboardUsername = document.getElementById('dashboard-username');
+        const lastAccessTime = document.getElementById('last-access-time');
+        const totalEmployeesCount = document.getElementById('total-employees-count');
+        const presentTodayCount = document.getElementById('present-today-count');
+        const lateTodayCount = document.getElementById('late-today-count');
+        const absentTodayCount = document.getElementById('absent-today-count');
+        const overtimeCount = document.getElementById('overtime-count');
+        const holidaysThisMonth = document.getElementById('holidays-this-month');
+        const presenceStatusChartCanvas = document.getElementById('presence-status-chart');
+        const weeklyHoursChartCanvas = document.getElementById('weekly-hours-chart');
+        const recentRecordsContainer = document.getElementById('recent-records-container');
+
+        // Função de login corrigida
+        async function logar() {
+            const username = usuarioInput.value;
+            const password = senhaInput.value;
+            errorMessageDiv.style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    accessToken = data.accessToken || data.access_token;
+
+                    if (!accessToken) {
+                        console.error('Erro: Token de acesso não encontrado na resposta do backend.');
+                        errorMessageDiv.textContent = 'Login falhou: Token não recebido do servidor.';
+                        errorMessageDiv.style.display = 'block';
+                        return;
+                    }
+
+                    localStorage.setItem('accessToken', accessToken);
+                    loggedInUsername = data.username;
+                    loggedInUserRole = data.role;
+                    loggedInUserId = data.id;
+
+                    if (loggedInUsernameDisplay) {
+                        loggedInUsernameDisplay.textContent = data.username;
+                    }
+
+                    await fetchLoggedInUserAndShowPointScreen();
+                    loadDashboardData();
+
+                    loginScreen.style.display = "none";
+                    appWrapper.style.display = "flex";
+                } else {
+                    errorMessageDiv.textContent = data.message || 'Erro ao fazer login.';
+                    errorMessageDiv.style.display = 'block';
+                }
+            } catch (err) {
+                console.error("Erro de rede:", err);
+                errorMessageDiv.textContent = "Erro de rede. Tente novamente.";
+                errorMessageDiv.style.display = 'block';
+            }
+        }
+
+        async function fetchLoggedInUserAndShowPointScreen() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                loginScreen.style.display = "flex";
+                appWrapper.style.display = "none";
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    loggedInUserId = data.userId || data.id;
+                    loggedInUsername = data.username;
+                    loggedInUserRole = data.role;
+
+                    if (loggedInUsernameDisplay) {
+                        loggedInUsernameDisplay.textContent = data.fullName || loggedInUsername;
+                    }
+
+                    loginScreen.style.display = "none";
+                    appWrapper.style.display = "flex";
+                    sidebar.style.display = "flex";
+
+                    // Redirecionamento baseado em role
+                    if (loggedInUserRole === 'ADMIN') {
+                        showScreen('dashboard-screen', document.getElementById('menu-dashboard'));
+                    } else {
+                        showScreen('point-screen', document.getElementById('menu-batida'));
+                    }
+
+                    updateTime();
+                    if (updateTimeInterval) clearInterval(updateTimeInterval);
+                    updateTimeInterval = setInterval(updateTime, 1000);
+
+                    if (!map) {
+                        map = L.map('map').setView([-3.10719, -60.0261], 13);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        }).addTo(map);
+                    }
+
+                    await getGeolocation();
+                    await fetchLastPointRecord();
+                    await fetchAllPointRecords();
+                    checkUserRoleForFeatures();
+                    if(map) map.invalidateSize();
+                } else {
+                    errorMessageDiv.textContent = 'Sessão expirada ou não autorizada. Faça o login novamente.';
+                    errorMessageDiv.style.display = 'block';
+                    accessToken = null;
+                    loggedInUserId = null;
+                    loggedInUsername = null;
+                    loggedInUserRole = null;
+                    localStorage.removeItem('accessToken');
+                    loginScreen.style.display = "flex";
+                    appWrapper.style.display = "none";
+                }
+            } catch (error) {
+                console.error('Erro ao buscar perfil:', error);
+                errorMessageDiv.textContent = `Erro de rede: ${error.message}. Verifique sua conexão.`;
+                errorMessageDiv.style.display = 'block';
+                accessToken = null;
+                loggedInUserId = null;
+                loggedInUsername = null;
+                loggedInUserRole = null;
+                localStorage.removeItem('accessToken');
+                loginScreen.style.display = "flex";
+                appWrapper.style.display = "none";
+            }
+        }
+
+        function getGeolocation() {
+            return new Promise((resolve, reject) => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            currentLatitude = position.coords.latitude;
+                            currentLongitude = position.coords.longitude;
+                            console.log("Localização obtida:", currentLatitude, currentLongitude);
+
+                            if (map) {
+                                map.setView([currentLatitude, currentLongitude], 16);
+                                if (marker) {
+                                    marker.setLatLng([currentLatitude, currentLongitude]);
+                                } else {
+                                    marker = L.marker([currentLatitude, currentLongitude]).addTo(map)
+                                        .bindPopup("Sua localização atual").openPopup();
+                                }
+                                map.invalidateSize();
+                            }
+                            resolve();
+                        },
+                        (error) => {
+                            console.error("Erro ao obter geolocalização:", error);
+                            alert("Não foi possível obter sua localização. Por favor, permita o acesso à geolocalização para registrar o ponto com localização.");
+                            currentLatitude = null;
+                            currentLongitude = null;
+                            if (map) {
+                                map.setView([-3.10719, -60.0261], 13);
+                            }
+                            reject(error);
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 5000,
+                            maximumAge: 0
+                        }
+                    );
+                } else {
+                    alert("Seu navegador não suporta geolocalização.");
+                    currentLatitude = null;
+                    currentLongitude = null;
+                    reject(new Error("Geolocalização não suportada."));
+                }
+            });
+        }
+
+        async function handlePonto(tipo) {
+            if (!accessToken || !loggedInUserId) {
+                alert('Sessão expirada. Faça o login novamente.');
+                logout();
+                return;
+            }
+
+            try {
+                await getGeolocation();
+                if (currentLatitude !== null && currentLongitude !== null) {
+                    await registrarPonto(tipo);
+                } else {
+                    alert("Não foi possível registrar o ponto sem sua localização. Tente novamente.");
+                }
+            } catch (error) {
+                console.error("Erro em handlePonto:", error);
+            }
+        }
+
+        async function registrarPonto(tipo) {
+            if (currentLatitude === null || currentLongitude === null) {
+                alert('Localização não disponível. Não foi possível registrar o ponto.');
+                return;
+            }
+
+            const pointData = {
+                userId: loggedInUserId,
+                type: tipo,
+                latitude: currentLatitude,
+                longitude: currentLongitude,
+            };
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/point-record`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify(pointData),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Ponto de ${tipo.replace('_', ' ')} registrado com sucesso!`);
+                    await fetchLastPointRecord();
+                    await fetchAllPointRecords();
+                } else {
+                    const errorMessage = data.message || `Erro desconhecido ao registrar ponto. Código: ${res.status}`;
+                    alert(`Falha ao registrar ponto (${tipo.replace('_', ' ')}): ${errorMessage}`);
+                    console.error('Falha ao registrar ponto:', res.status, data);
+                }
+            } catch (error) {
+                console.error('Erro de rede ao registrar ponto:', error);
+                alert(`Erro de rede ao registrar ponto: ${error.message}. Verifique sua conexão ou URL do backend.`);
+            }
+        }
+
+        async function fetchLastPointRecord() {
+            if (!accessToken || !loggedInUserId) {
+                lastRecordTypeSpan.textContent = '[Nenhum registro ainda]';
+                lastRecordTimeSpan.textContent = '--:--:--';
+                lastRecordDateSpan.textContent = '--/--/----';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/point-record/last`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data) {
+                    lastRecordTypeSpan.textContent = data.type.replace('_', ' ');
+                    const recordDate = new Date(data.timestamp);
+                    const timeString = recordDate.toLocaleTimeString('pt-BR');
+                    const dateString = recordDate.toLocaleDateString('pt-BR');
+                    lastRecordTimeSpan.textContent = timeString;
+                    lastRecordDateSpan.textContent = dateString;
+                } else if (res.status === 404) {
+                    console.log('No last record found for this user (404).');
+                    lastRecordTypeSpan.textContent = '[Nenhum registro ainda]';
+                    lastRecordTimeSpan.textContent = '--:--:--';
+                    lastRecordDateSpan.textContent = '--/--/----';
+                } else {
+                    console.error('Error fetching last record:', data.message || 'Unknown error');
+                }
+            } catch (error) {
+                console.error('Network Error fetching last record:', error);
+            }
+        }
+
+        async function fetchAllPointRecords() {
+            if (!accessToken || !loggedInUserId) {
+                pointRecordsListMain.innerHTML = '<li>Nenhum registro encontrado.</li>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/point-record/history`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+
+                const data = await res.json();
+
+                if (res.ok && Array.isArray(data)) {
+                    pointRecordsListMain.innerHTML = '';
+                    if (data.length === 0) {
+                        pointRecordsListMain.innerHTML = '<li>Nenhum registro encontrado.</li>';
+                    } else {
+                        data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                        data.forEach(record => {
+                            const li = document.createElement('li');
+                            const recordDate = new Date(record.timestamp);
+                            const timeString = recordDate.toLocaleTimeString('pt-BR');
+                            const dateString = recordDate.toLocaleDateString('pt-BR');
+                            li.innerHTML = `
+                                <div>
+                                    <strong>${record.type.replace('_', ' ')}</strong><br>
+                                    ${timeString} - ${dateString}
+                                </div>
+                                <button class="btn-pdf" onclick="downloadPdfComprovante('${record.id}')">PDF</button>
+                            `;
+                            pointRecordsListMain.appendChild(li);
+                        });
+                    }
+                } else if (res.status === 404) {
+                    console.log('No point records found for this user (404).');
+                    pointRecordsListMain.innerHTML = '<li>Nenhum registro encontrado.</li>';
+                } else {
+                    console.error('Error fetching all records:', data.message || 'Unknown error');
+                    pointRecordsListMain.innerHTML = '<li>Erro ao carregar registros.</li>';
+                }
+            } catch (error) {
+                console.error('Network Error fetching all records:', error);
+                pointRecordsListMain.innerHTML = '<li>Erro de rede ao carregar registros.</li>';
+            }
+        }
+
+        async function downloadPdfComprovante(recordId) {
+            if (!accessToken) {
+                alert('Sessão expirada. Faça o login novamente para baixar o comprovante.');
+                logout();
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/point-record/${recordId}/receipt-pdf`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `comprovante_ponto_${recordId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    alert('Comprovante PDF gerado e baixado com sucesso!');
+                } else {
+                    const errorData = await res.json();
+                    console.error('Failed to download PDF:', errorData.message || 'Unknown error');
+                    alert(`Erro ao baixar comprovante: ${errorData.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during PDF download:', error);
+                alert(`Erro de rede ao baixar comprovante: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        function showScreen(screenId, menuItemElement = null) {
+            // Verificação de acesso baseado em role
+            if ((screenId === 'dashboard-screen' || 
+                 screenId === 'register-user-form' || 
+                 screenId === 'mirror-report-screen') && 
+                loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para acessar esta funcionalidade.');
+                return;
+            }
+
+            document.querySelectorAll('.content-screen').forEach(screen => {
+                screen.style.display = 'none';
+            });
+
+            const reportsMenuItems = document.getElementById('reports-menu-items');
+            if (reportsMenuItems) {
+                reportsMenuItems.style.display = 'none';
+            }
+
+            const targetScreen = document.getElementById(screenId);
+            if (targetScreen) {
+                targetScreen.style.display = 'flex';
+                if (screenId === 'point-screen' && map) {
+                    setTimeout(() => { map.invalidateSize(); }, 0);
+                }
+                
+                if (screenId === 'dashboard-screen') {
+                    loadDashboardData();
+                }
+            }
+
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            if (menuItemElement) {
+                menuItemElement.classList.add('active');
+            }
+        }
+
+        function toggleReportsMenu() {
+            const menu = document.getElementById('reports-menu-items');
+            const arrow = document.getElementById('reports-arrow');
+            const header = document.querySelector('#admin-menu-section .cadastro-header');
+
+            if (menu.style.display === 'none' || menu.style.display === '') {
+                menu.style.display = 'block';
+                arrow.textContent = '▲';
+                header.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                header.style.borderLeft = '3px solid #2E8B57';
+            } else {
+                menu.style.display = 'none';
+                arrow.textContent = '▼';
+                header.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                header.style.borderLeft = '3px solid transparent';
+            }
+        }
+
+        function toggleFormVisibility(formAreaId) {
+            const formArea = document.getElementById(formAreaId);
+            if (formArea.classList.contains('active')) {
+                formArea.classList.remove('active');
+                formArea.style.display = 'none';
+            } else {
+                formArea.classList.add('active');
+                formArea.style.display = 'flex';
+            }
+        }
+
+        function toggleCadastroMenu() {
+            const menu = document.getElementById('cadastro-menu-items');
+            const arrow = document.getElementById('cadastro-arrow');
+            const header = document.querySelector('.cadastro-header');
+
+            if (menu.style.display === 'none' || menu.style.display === '') {
+                menu.style.display = 'block';
+                arrow.textContent = '▲';
+                header.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                header.style.borderLeft = '3px solid #2E8B57';
+            } else {
+                menu.style.display = 'none';
+                arrow.textContent = '▼';
+                header.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                header.style.borderLeft = '3px solid transparent';
+            }
+        }
+
+        async function registerNewUser() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar usuários.');
+                return;
+            }
+
+            const requiredFields = [
+                'newFullName', 'userGender', 'newCPF', 'userPis',
+                'userStatus', 'newCompany', 'employeeType', 'hireDate',
+                'newEmployeeId', 'userSchedule', 'userDepartment',
+                'userRole', 'newUsername', 'newPassword'
+            ];
+            
+            for (const fieldId of requiredFields) {
+                if (!document.getElementById(fieldId).value) {
+                    alert(`Por favor, preencha o campo ${document.querySelector(`label[for="${fieldId}"]`).textContent.replace('*', '').trim()}`);
+                    return;
+                }
+            }
+
+            const userData = {
+                fullName: document.getElementById('newFullName').value,
+                gender: document.getElementById('userGender').value,
+                cpf: document.getElementById('newCPF').value.replace(/\D/g, ''),
+                pis: document.getElementById('userPis').value.replace(/\D/g, ''),
+                status: document.getElementById('userStatus').value,
+                companyId: document.getElementById('newCompany').value,
+                employeeType: document.getElementById('employeeType').value,
+                hireDate: document.getElementById('hireDate').value,
+                terminationDate: document.getElementById('terminationDate').value || null,
+                employeeId: document.getElementById('newEmployeeId').value,
+                scheduleId: document.getElementById('userSchedule').value,
+                departmentId: document.getElementById('userDepartment').value,
+                roleId: document.getElementById('userRole').value,
+                username: document.getElementById('newUsername').value,
+                password: document.getElementById('newPassword').value,
+                role: document.getElementById('newUserRole').value
+            };
+
+            const photoFile = document.getElementById('user-photo').files[0];
+            if (photoFile) {
+                userData.photo = await toBase64(photoFile);
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify(userData),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Usuário '${userData.fullName}' cadastrado com sucesso!`);
+                    // Limpar formulário
+                    document.getElementById('add-user-form-area').querySelectorAll('input, select').forEach(el => {
+                        if (el.type !== 'file') {
+                            el.value = '';
+                        }
+                    });
+                    document.getElementById('user-photo-preview').innerHTML = '<span class="material-icons">person</span>';
+                    toggleFormVisibility('add-user-form-area');
+                } else {
+                    console.error('Failed to register user:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar usuário: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during user registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function registerNewCompany() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar empresas.');
+                return;
+            }
+
+            const requiredFields = [
+                'newCompanyName', 'newCompanyDocument', 'companyStatus',
+                'companyCep', 'companyAddress', 'companyNumber',
+                'companyDistrict', 'companyCity', 'companyState'
+            ];
+            
+            for (const fieldId of requiredFields) {
+                if (!document.getElementById(fieldId).value) {
+                    alert(`Por favor, preencha o campo ${document.querySelector(`label[for="${fieldId}"]`).textContent.replace('*', '').trim()}`);
+                    return;
+                }
+            }
+
+            const companyData = {
+                name: document.getElementById('newCompanyName').value,
+                documentType: document.getElementById('documentType').value,
+                documentNumber: document.getElementById('newCompanyDocument').value.replace(/\D/g, ''),
+                status: document.getElementById('companyStatus').value,
+                address: {
+                    cep: document.getElementById('companyCep').value.replace(/\D/g, ''),
+                    street: document.getElementById('companyAddress').value,
+                    number: document.getElementById('companyNumber').value,
+                    complement: document.getElementById('companyComplement').value,
+                    district: document.getElementById('companyDistrict').value,
+                    city: document.getElementById('companyCity').value,
+                    state: document.getElementById('companyState').value,
+                    country: document.getElementById('companyCountry').value
+                }
+            };
+
+            const logoFile = document.getElementById('company-logo').files[0];
+            if (logoFile) {
+                companyData.logo = await toBase64(logoFile);
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/companies`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify(companyData),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Empresa '${companyData.name}' cadastrada com sucesso!`);
+                    // Limpar formulário
+                    document.getElementById('add-company-form-area').querySelectorAll('input, select').forEach(el => {
+                        if (el.type !== 'file' && el.id !== 'companyCountry') {
+                            el.value = '';
+                        }
+                    });
+                    document.getElementById('company-logo-preview').innerHTML = '<span class="material-icons">business</span>';
+                    toggleFormVisibility('add-company-form-area');
+                } else {
+                    console.error('Failed to register company:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar empresa: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during company registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function registerNewSchedule() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar horários.');
+                return;
+            }
+
+            const newScheduleName = document.getElementById('newScheduleName').value;
+            const newScheduleType = document.getElementById('newScheduleType').value;
+            const newScheduleStart = document.getElementById('newScheduleStart').value;
+            const newScheduleEnd = document.getElementById('newScheduleEnd').value;
+            const newScheduleBreakStart = document.getElementById('newScheduleBreakStart').value;
+            const newScheduleBreakEnd = document.getElementById('newScheduleBreakEnd').value;
+
+            if (!newScheduleName || !newScheduleStart || !newScheduleEnd || !newScheduleBreakStart || !newScheduleBreakEnd) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/schedules`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        name: newScheduleName,
+                        type: newScheduleType,
+                        startTime: newScheduleStart,
+                        endTime: newScheduleEnd,
+                        breakStart: newScheduleBreakStart,
+                        breakEnd: newScheduleBreakEnd
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Horário '${newScheduleName}' cadastrado com sucesso!`);
+                    document.getElementById('newScheduleName').value = '';
+                    document.getElementById('newScheduleStart').value = '';
+                    document.getElementById('newScheduleEnd').value = '';
+                    document.getElementById('newScheduleBreakStart').value = '';
+                    document.getElementById('newScheduleBreakEnd').value = '';
+                    toggleFormVisibility('add-schedule-form-area');
+                } else {
+                    console.error('Failed to register schedule:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar horário: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during schedule registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function registerNewRole() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar cargos.');
+                return;
+            }
+
+            const newRoleName = document.getElementById('newRoleName').value;
+            const newRoleDepartment = document.getElementById('newRoleDepartment').value;
+            const newRoleSalary = document.getElementById('newRoleSalary').value;
+
+            if (!newRoleName || !newRoleDepartment || !newRoleSalary) {
+                alert('Por favor, preencha todos os campos obrigatórios (Nome, Departamento e Salário).');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/roles`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        name: newRoleName,
+                        department: newRoleDepartment,
+                        baseSalary: newRoleSalary
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Cargo '${newRoleName}' cadastrado com sucesso!`);
+                    document.getElementById('newRoleName').value = '';
+                    document.getElementById('newRoleDepartment').value = 'TI';
+                    document.getElementById('newRoleSalary').value = '';
+                    toggleFormVisibility('add-role-form-area');
+                } else {
+                    console.error('Failed to register role:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar cargo: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during role registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function registerNewDepartment() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar departamentos.');
+                return;
+            }
+
+            const newDepartmentName = document.getElementById('newDepartmentName').value;
+            const newDepartmentManager = document.getElementById('newDepartmentManager').value;
+            const newDepartmentLocation = document.getElementById('newDepartmentLocation').value;
+
+            if (!newDepartmentName || !newDepartmentManager || !newDepartmentLocation) {
+                alert('Por favor, preencha todos os campos obrigatórios (Nome, Gerente e Localização).');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/departments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        name: newDepartmentName,
+                        manager: newDepartmentManager,
+                        location: newDepartmentLocation
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Departamento '${newDepartmentName}' cadastrado com sucesso!`);
+                    document.getElementById('newDepartmentName').value = '';
+                    document.getElementById('newDepartmentManager').value = '';
+                    document.getElementById('newDepartmentLocation').value = '';
+                    toggleFormVisibility('add-department-form-area');
+                } else {
+                    console.error('Failed to register department:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar departamento: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during department registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function registerNewHoliday() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar feriados.');
+                return;
+            }
+
+            const newHolidayName = document.getElementById('newHolidayName').value;
+            const newHolidayDate = document.getElementById('newHolidayDate').value;
+            const newHolidayDescription = document.getElementById('newHolidayDescription').value;
+
+            if (!newHolidayName || !newHolidayDate) {
+                alert('Por favor, preencha pelo menos o Nome e a Data do feriado.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/holidays`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        name: newHolidayName,
+                        date: newHolidayDate,
+                        description: newHolidayDescription
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Feriado '${newHolidayName}' cadastrado com sucesso!`);
+                    document.getElementById('newHolidayName').value = '';
+                    document.getElementById('newHolidayDate').value = '';
+                    document.getElementById('newHolidayDescription').value = '';
+                    toggleFormVisibility('add-holiday-form-area');
+                } else {
+                    console.error('Failed to register holiday:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar feriado: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during holiday registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function registerNewJustification() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar justificativas.');
+                return;
+            }
+
+            const newJustificationEmployee = document.getElementById('newJustificationEmployee').value;
+            const newJustificationDate = document.getElementById('newJustificationDate').value;
+            const newJustificationReason = document.getElementById('newJustificationReason').value;
+            const newJustificationDetails = document.getElementById('newJustificationDetails').value;
+
+            if (!newJustificationEmployee || !newJustificationDate || !newJustificationReason) {
+                alert('Por favor, preencha pelo menos o Funcionário, Data e Motivo.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/justifications`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        employeeId: newJustificationEmployee,
+                        date: newJustificationDate,
+                        reason: newJustificationReason,
+                        details: newJustificationDetails
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Justificativa cadastrada com sucesso!`);
+                    document.getElementById('newJustificationEmployee').value = '';
+                    document.getElementById('newJustificationDate').value = '';
+                    document.getElementById('newJustificationReason').value = 'SAUDE';
+                    document.getElementById('newJustificationDetails').value = '';
+                    toggleFormVisibility('add-justification-form-area');
+                } else {
+                    console.error('Failed to register justification:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar justificativa: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during justification registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function registerNewAbsence() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar afastamentos.');
+                return;
+            }
+
+            const newAbsenceEmployee = document.getElementById('newAbsenceEmployee').value;
+            const newAbsenceType = document.getElementById('newAbsenceType').value;
+            const newAbsenceStart = document.getElementById('newAbsenceStart').value;
+            const newAbsenceEnd = document.getElementById('newAbsenceEnd').value;
+            const newAbsenceReason = document.getElementById('newAbsenceReason').value;
+
+            if (!newAbsenceEmployee || !newAbsenceType || !newAbsenceStart || !newAbsenceEnd) {
+                alert('Por favor, preencha pelo menos o Funcionário, Tipo, Data Início e Data Fim.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/absences`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        employeeId: newAbsenceEmployee,
+                        type: newAbsenceType,
+                        startDate: newAbsenceStart,
+                        endDate: newAbsenceEnd,
+                        reason: newAbsenceReason
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Afastamento cadastrado com sucesso!`);
+                    document.getElementById('newAbsenceEmployee').value = '';
+                    document.getElementById('newAbsenceType').value = 'MEDICAL';
+                    document.getElementById('newAbsenceStart').value = '';
+                    document.getElementById('newAbsenceEnd').value = '';
+                    document.getElementById('newAbsenceReason').value = '';
+                    toggleFormVisibility('add-absence-form-area');
+                } else {
+                    console.error('Failed to register absence:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar afastamento: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during absence registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function registerNewBankHours() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar banco de horas.');
+                return;
+            }
+
+            const newBankHoursEmployee = document.getElementById('newBankHoursEmployee').value;
+            const newBankHoursDate = document.getElementById('newBankHoursDate').value;
+            const newBankHoursType = document.getElementById('newBankHoursType').value;
+            const newBankHoursAmount = document.getElementById('newBankHoursAmount').value;
+            const newBankHoursReason = document.getElementById('newBankHoursReason').value;
+
+            if (!newBankHoursEmployee || !newBankHoursDate || !newBankHoursType || !newBankHoursAmount) {
+                alert('Por favor, preencha pelo menos o Funcionário, Data, Tipo e Quantidade.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/bank-hours`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        employeeId: newBankHoursEmployee,
+                        date: newBankHoursDate,
+                        type: newBankHoursType,
+                        amount: newBankHoursAmount,
+                        reason: newBankHoursReason
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Banco de horas cadastrado com sucesso!`);
+                    document.getElementById('newBankHoursEmployee').value = '';
+                    document.getElementById('newBankHoursDate').value = '';
+                    document.getElementById('newBankHoursType').value = 'EXTRA';
+                    document.getElementById('newBankHoursAmount').value = '';
+                    document.getElementById('newBankHoursReason').value = '';
+                    toggleFormVisibility('add-bank-hours-form-area');
+                } else {
+                    console.error('Failed to register bank hours:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar banco de horas: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during bank hours registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function registerNewCompensationBank() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar banco de compensação.');
+                return;
+            }
+
+            const newCompensationBankEmployee = document.getElementById('newCompensationBankEmployee').value;
+            const newCompensationBankDate = document.getElementById('newCompensationBankDate').value;
+            const newCompensationBankType = document.getElementById('newCompensationBankType').value;
+            const newCompensationBankAmount = document.getElementById('newCompensationBankAmount').value;
+            const newCompensationBankReason = document.getElementById('newCompensationBankReason').value;
+
+            if (!newCompensationBankEmployee || !newCompensationBankDate || !newCompensationBankType || !newCompensationBankAmount) {
+                alert('Por favor, preencha pelo menos o Funcionário, Data, Tipo e Valor.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/compensation-bank`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        employeeId: newCompensationBankEmployee,
+                        date: newCompensationBankDate,
+                        type: newCompensationBankType,
+                        amount: newCompensationBankAmount,
+                        reason: newCompensationBankReason
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Banco de compensação cadastrado com sucesso!`);
+                    document.getElementById('newCompensationBankEmployee').value = '';
+                    document.getElementById('newCompensationBankDate').value = '';
+                    document.getElementById('newCompensationBankType').value = 'CREDIT';
+                    document.getElementById('newCompensationBankAmount').value = '';
+                    document.getElementById('newCompensationBankReason').value = '';
+                    toggleFormVisibility('add-compensation-bank-form-area');
+                } else {
+                    console.error('Failed to register compensation bank:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar banco de compensação: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during compensation bank registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function registerNewWorkLocation() {
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para cadastrar locais de trabalho.');
+                return;
+            }
+
+            const newWorkLocationName = document.getElementById('newWorkLocationName').value;
+            const newWorkLocationAddress = document.getElementById('newWorkLocationAddress').value;
+            const newWorkLocationRadius = document.getElementById('newWorkLocationRadius').value;
+            const newWorkLocationLatitude = document.getElementById('newWorkLocationLatitude').value;
+            const newWorkLocationLongitude = document.getElementById('newWorkLocationLongitude').value;
+
+            if (!newWorkLocationName || !newWorkLocationAddress || !newWorkLocationRadius || !newWorkLocationLatitude || !newWorkLocationLongitude) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/work-locations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        name: newWorkLocationName,
+                        address: newWorkLocationAddress,
+                        radius: newWorkLocationRadius,
+                        latitude: newWorkLocationLatitude,
+                        longitude: newWorkLocationLongitude
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(`Local de trabalho '${newWorkLocationName}' cadastrado com sucesso!`);
+                    document.getElementById('newWorkLocationName').value = '';
+                    document.getElementById('newWorkLocationAddress').value = '';
+                    document.getElementById('newWorkLocationRadius').value = '';
+                    document.getElementById('newWorkLocationLatitude').value = '';
+                    document.getElementById('newWorkLocationLongitude').value = '';
+                    toggleFormVisibility('add-work-location-form-area');
+                } else {
+                    console.error('Failed to register work location:', data.message || 'Unknown error');
+                    alert(`Erro ao cadastrar local de trabalho: ${data.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during work location registration:', error);
+                alert(`Erro de rede: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        async function generateMirrorReportPdf() {
+            // Verificação adicional de role
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para gerar relatórios.');
+                return;
+            }
+
+            if (!accessToken) {
+                alert('Sessão expirada. Faça o login novamente.');
+                logout();
+                return;
+            }
+
+            const startDate = document.getElementById('mirrorStartDate').value;
+            const endDate = document.getElementById('mirrorEndDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Por favor, selecione a Data Inicial e a Data Final.');
+                return;
+            }
+
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('A Data Inicial não pode ser maior que a Data Final.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/reports/point-mirror-pdf?userId=${loggedInUserId}&startDate=${startDate}&endDate=${endDate}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `espelho_ponto_${loggedInUsername}_${startDate}_a_${endDate}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    alert('Espelho de Ponto gerado e baixado com sucesso!');
+                } else {
+                    const errorData = await res.json();
+                    console.error('Failed to generate Mirror Report PDF:', errorData.message || 'Unknown error');
+                    alert(`Erro ao gerar espelho de ponto: ${errorData.message || 'Falha desconhecida.'}`);
+                }
+            } catch (error) {
+                console.error('Network Error during Mirror Report PDF generation:', error);
+                alert(`Erro de rede ao gerar espelho de ponto: ${error.message}. Verifique sua conexão.`);
+            }
+        }
+
+        function checkUserRoleForFeatures() {
+            const adminMenuSection = document.getElementById('admin-menu-section');
+            const dashboardMenuSection = document.getElementById('dashboard-menu-section');
+            const cadastroMenuSection = document.getElementById('cadastro-menu-section');
+            const userMenuSection = document.getElementById('user-menu-section');
+
+            if (loggedInUserRole === 'ADMIN') {
+                adminMenuSection.style.display = 'block';
+                dashboardMenuSection.style.display = 'block';
+                cadastroMenuSection.style.display = 'block';
+                userMenuSection.style.display = 'none';
+            } else {
+                adminMenuSection.style.display = 'none';
+                dashboardMenuSection.style.display = 'none';
+                cadastroMenuSection.style.display = 'none';
+                userMenuSection.style.display = 'block';
+            }
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('pt-BR');
+            if (currentTimeDiv) {
+                currentTimeDiv.textContent = timeString;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            accessToken = null;
+            loggedInUserId = null;
+            loggedInUsername = null;
+            loggedInUserRole = null;
+            clearInterval(updateTimeInterval);
+            alert('Você foi desconectado.');
+            loginScreen.style.display = "flex";
+            appWrapper.style.display = "none";
+            sidebar.style.display = "none";
+            document.querySelectorAll('.content-screen').forEach(screen => {
+                screen.style.display = 'none';
+            });
+            
+            const reportsMenuItems = document.getElementById('reports-menu-items');
+            if (reportsMenuItems) {
+                reportsMenuItems.style.display = 'none';
+            }
+            
+            errorMessageDiv.style.display = 'none';
+            usuarioInput.value = '';
+            senhaInput.value = '';
+        }
+
+        function esqueceuSenha() {
+            alert('Funcionalidade "Esqueceu a senha?" será implementada. Por favor, entre em contato com o suporte.');
+        }
+
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('senha');
+            const toggleIcon = document.querySelector('.login-box .input-group .password-toggle');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.textContent = 'visibility';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.textContent = 'visibility_off';
+            }
+        }
+
+        async function loadDashboardData() {
+            // Verificação adicional de role
+            if (loggedInUserRole !== 'ADMIN') {
+                alert('Acesso restrito: Você não tem permissão para acessar o dashboard.');
+                showScreen('point-screen', document.getElementById('menu-batida'));
+                return;
+            }
+
+            if (!accessToken || !loggedInUserId) {
+                alert('Sessão expirada. Faça o login novamente.');
+                logout();
+                return;
+            }
+
+            try {
+                // Atualiza o nome do usuário no dashboard
+                if (dashboardUsername) {
+                    dashboardUsername.textContent = loggedInUsernameDisplay.textContent;
+                }
+                
+                // Data do último acesso (simulado)
+                const lastAccess = new Date().toLocaleString('pt-BR');
+                if (lastAccessTime) {
+                    lastAccessTime.textContent = lastAccess;
+                }
+
+                // Carrega os dados do dashboard
+                const overviewResponse = await fetch(`${API_BASE_URL}/dashboard/overview`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!overviewResponse.ok) {
+                    if (overviewResponse.status === 401 || overviewResponse.status === 403) {
+                        alert('Você não tem permissão para acessar o dashboard ou sua sessão expirou.');
+                        logout();
+                    }
+                    throw new Error(`Erro ao buscar dados de visão geral: ${overviewResponse.statusText}`);
+                }
+                
+                const overviewData = await overviewResponse.json();
+                if (totalEmployeesCount) totalEmployeesCount.textContent = overviewData.totalEmployees || '--';
+                if (presentTodayCount) presentTodayCount.textContent = overviewData.presentTodayCount || '--';
+                if (lateTodayCount) lateTodayCount.textContent = overviewData.lateTodayCount || '--';
+                if (absentTodayCount) absentTodayCount.textContent = overviewData.absentTodayCount || '--';
+                if (overtimeCount) overtimeCount.textContent = overviewData.overtimeCount || '--';
+                if (holidaysThisMonth) holidaysThisMonth.textContent = overviewData.holidaysThisMonth || '--';
+
+                // Carrega os gráficos
+                const presenceResponse = await fetch(`${API_BASE_URL}/dashboard/presence-status?period=today`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!presenceResponse.ok) {
+                    throw new Error(`Erro ao buscar status de presença: ${presenceResponse.statusText}`);
+                }
+                
+                const presenceData = await presenceResponse.json();
+                renderPresenceChart(presenceData.labels, presenceData.data, presenceData.colors);
+
+                const weeklyHoursResponse = await fetch(`${API_BASE_URL}/dashboard/weekly-hours?period=week`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!weeklyHoursResponse.ok) {
+                    throw new Error(`Erro ao buscar horas semanais: ${weeklyHoursResponse.statusText}`);
+                }
+                
+                const weeklyHoursData = await weeklyHoursResponse.json();
+                const weeklyLabels = weeklyHoursData.map(item => {
+                    const date = new Date(item.date);
+                    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                });
+                const weeklyValues = weeklyHoursData.map(item => item.hours);
+                renderWeeklyHoursChart(weeklyLabels, weeklyValues);
+
+                // Carrega registros recentes
+                await loadRecentRecords();
+
+            } catch (error) {
+                console.error('Erro ao carregar o dashboard:', error);
+                alert(`Erro ao carregar dados do dashboard: ${error.message}`);
+            }
+        }
+
+        async function loadRecentRecords() {
+    // Estas variáveis (accessToken, loggedInUserId, recentRecordsContainer, lastRecordTypeSpan, etc.)
+    // devem estar definidas globalmente ou passadas para esta função.
+    if (!accessToken || !loggedInUserId) {
+        if (lastRecordTypeSpan) lastRecordTypeSpan.textContent = '[Nenhum registro ainda]';
+        if (lastRecordTimeSpan) lastRecordTimeSpan.textContent = '--:--:--';
+        if (lastRecordDateSpan) lastRecordDateSpan.textContent = '--/--/----';
+        if (recentRecordsContainer) recentRecordsContainer.innerHTML = '<p>Faça login para ver os registros.</p>';
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/point-record/last`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            },
+        });
+
+        if (!res.ok) {
+            // Se a resposta não for OK (ex: 401 Unauthorized, 404 Not Found, 500 Internal Server Error)
+            const errorData = await res.json();
+            console.error('Erro na API ao carregar último registro:', errorData);
+
+            if (lastRecordTypeSpan) lastRecordTypeSpan.textContent = '[Erro ao carregar]';
+            if (lastRecordTimeSpan) lastRecordTimeSpan.textContent = '--:--:--';
+            if (lastRecordDateSpan) lastRecordDateSpan.textContent = '--/--/----';
+            if (recentRecordsContainer) {
+                recentRecordsContainer.innerHTML = `
+                    <div class="record-item">
+                        <span class="material-icons">error</span>
+                        <div class="record-details">
+                            <span class="record-name">Erro ao carregar registros</span>
+                            <span class="record-time">Por favor tente novamente</span>
+                        </div>
+                    </div>
+                `;
+            }
+            return; // Interrompe a execução
+        }
+
+        const data = await res.json(); // Data agora será o objeto do último registro OU null/undefined
+
+        if (recentRecordsContainer) {
+            recentRecordsContainer.innerHTML = ''; // Limpa o container antes de adicionar o novo item
+
+            // *** MUDANÇA ESSENCIAL AQUI: Verificamos se 'data' é um objeto válido, NÃO USAMOS forEach ***
+            if (data && typeof data === 'object' && data !== null) {
+                const record = data; // 'data' já é o objeto do registro de ponto
+
+                const recordItem = document.createElement('div');
+                recordItem.className = 'record-item';
+
+                let statusClass = 'on-time';
+                let statusText = 'No horário';
+
+                // Lógica para status (se 'record.status' estiver disponível no objeto retornado)
+                if (record.status === 'LATE') {
+                    statusClass = 'late';
+                    statusText = 'Atrasado';
+                } else if (record.status === 'ABSENT') {
+                    statusClass = 'absent';
+                    statusText = 'Ausente';
+                }
+
+                // Formate a data e a hora do timestamp do registro
+                const recordTimestamp = new Date(record.timestamp);
+                const formattedTime = recordTimestamp.toLocaleTimeString('pt-BR');
+                const formattedDate = recordTimestamp.toLocaleDateString('pt-BR');
+
+                recordItem.innerHTML = `
+                    <span class="material-icons">person</span>
+                    <div class="record-details">
+                        <span class="record-name">${record.user ? record.user.fullName || record.user.username : 'Usuário Desconhecido'}</span>
+                        <span class="record-time">${record.type.replace('_', ' ')} às ${formattedTime}</span>
+                        <span class="record-date">em ${formattedDate}</span>
+                    </div>
+                    <span class="record-status ${statusClass}">${statusText}</span>
+                `;
+                recentRecordsContainer.appendChild(recordItem);
+
+                // Atualizar os spans de último registro também, se eles existirem
+                if (lastRecordTypeSpan) lastRecordTypeSpan.textContent = record.type === 'IN' ? 'Entrada' : 'Saída';
+                if (lastRecordTimeSpan) lastRecordTimeSpan.textContent = formattedTime;
+                if (lastRecordDateSpan) lastRecordDateSpan.textContent = formattedDate;
+
+            } else {
+                // Se nenhum registro foi retornado (data é null ou vazio)
+                if (lastRecordTypeSpan) lastRecordTypeSpan.textContent = '[Nenhum registro ainda]';
+                if (lastRecordTimeSpan) lastRecordTimeSpan.textContent = '--:----';
+                if (lastRecordDateSpan) lastRecordDateSpan.textContent = '--/--/----';
+                if (recentRecordsContainer) recentRecordsContainer.innerHTML = '<p>Nenhum registro de ponto recente encontrado.</p>';
+            }
+        }
+
+    } catch (error) {
+        console.error('Erro ao carregar registros recentes:', error);
+        if (lastRecordTypeSpan) lastRecordTypeSpan.textContent = '[Erro de rede]';
+        if (lastRecordTimeSpan) lastRecordTimeSpan.textContent = '--:--:--';
+        if (lastRecordDateSpan) lastRecordDateSpan.textContent = '--/--/----';
+        if (recentRecordsContainer) {
+            recentRecordsContainer.innerHTML = `
+                <div class="record-item">
+                    <span class="material-icons">cloud_off</span>
+                    <div class="record-details">
+                        <span class="record-name">Erro de conexão</span>
+                        <span class="record-time">Verifique sua internet ou servidor</span>
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
+
+        function renderPresenceChart(labels, data, colors) {
+            if (presenceChart) {
+                presenceChart.destroy();
+            }
+            const ctx = presenceStatusChartCanvas.getContext('2d');
+            presenceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: false,
+                            text: 'Status de Presença Hoje'
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderWeeklyHoursChart(labels, data) {
+            if (weeklyChart) {
+                weeklyChart.destroy();
+            }
+            const ctx = weeklyHoursChartCanvas.getContext('2d');
+            weeklyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Horas Trabalhadas',
+                        data: data,
+                        backgroundColor: '#38a169',
+                        borderColor: '#2e7d32',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        title: {
+                            display: false,
+                            text: 'Horas Trabalhadas na Semana'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Horas'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Dia'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePresenceChart() {
+            const period = document.getElementById('presence-chart-filter').value;
+            console.log('Atualizar gráfico de presença para:', period);
+            // Implemente a lógica para atualizar o gráfico com base no período selecionado
+        }
+
+        function updateHoursChart() {
+            const period = document.getElementById('hours-chart-filter').value;
+            console.log('Atualizar gráfico de horas para:', period);
+            // Implemente a lógica para atualizar o gráfico com base no período selecionado
+        }
+
+        // Novas funções para os formulários modificados
+        function previewCompanyLogo(event) {
+            const preview = document.getElementById('company-logo-preview');
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function() {
+                preview.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = reader.result;
+                preview.appendChild(img);
+            }
+            
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewUserPhoto(event) {
+            const preview = document.getElementById('user-photo-preview');
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function() {
+                preview.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = reader.result;
+                preview.appendChild(img);
+            }
+            
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateDocumentMask() {
+            const docType = document.getElementById('documentType').value;
+            const maskedInput = document.querySelector('.masked-input');
+            const docInput = document.getElementById('newCompanyDocument');
+            
+            if (docType === 'CNPJ') {
+                maskedInput.setAttribute('data-mask', '00.000.000/0000-00');
+                docInput.placeholder = '00.000.000/0000-00';
+            } else {
+                maskedInput.setAttribute('data-mask', '000.000.000-00');
+                docInput.placeholder = '000.000.000-00';
+            }
+        }
+
+        async function searchCep(type) {
+            const cep = document.getElementById(`${type}Cep`).value.replace(/\D/g, '');
+            
+            if (cep.length !== 8) {
+                alert('CEP deve conter 8 dígitos');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+                
+                if (data.erro) {
+                    throw new Error('CEP não encontrado');
+                }
+                
+                document.getElementById(`${type}Address`).value = data.logradouro;
+                document.getElementById(`${type}District`).value = data.bairro;
+                document.getElementById(`${type}City`).value = data.localidade;
+                document.getElementById(`${type}State`).value = data.uf;
+                document.getElementById(`${type}Country`).value = 'Brasil';
+                
+                // Focar no campo número após preencher
+                document.getElementById(`${type}Number`).focus();
+            } catch (error) {
+                console.error('Erro ao buscar CEP:', error);
+                alert('Erro ao buscar CEP. Verifique o número e tente novamente.');
+            }
+        }
+
+        // Função para aplicar máscaras nos inputs
+        function applyMasks() {
+            document.querySelectorAll('.masked-input input').forEach(input => {
+                input.addEventListener('input', function(e) {
+                    const mask = this.parentElement.getAttribute('data-mask');
+                    const value = this.value.replace(/\D/g, '');
+                    let maskedValue = '';
+                    
+                    let maskIndex = 0;
+                    for (let i = 0; i < mask.length && maskIndex < value.length; i++) {
+                        if (mask[i] === '0') {
+                            maskedValue += value[maskIndex++];
+                        } else {
+                            maskedValue += mask[i];
+                        }
+                    }
+                    
+                    this.value = maskedValue;
+                });
+            });
+        }
+
+        // Função auxiliar para converter arquivo para base64
+        function toBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+
+
+    // Funções para carregar dropdowns
+
+    async function loadCompaniesForDropdown() {
+        try {
+            const accessToken = localStorage.getItem('accessToken'); // <-- OBTENHA O TOKEN AQUI
+            if (!accessToken) {
+                console.warn('Nenhum token de acesso encontrado para carregar empresas. O usuário pode não estar logado.');
+                return; // Não faz a requisição se não tiver token
+            }
+
+            const res = await fetch(`${API_BASE_URL}/companies`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const dropdown = document.getElementById('newCompany'); // Assegure-se que este ID existe no seu HTML
+                if (dropdown) {
+                    dropdown.innerHTML = '<option value="">Selecione uma empresa</option>';
+
+                    data.forEach(company => {
+                        const option = document.createElement('option');
+                        option.value = company.id;
+                        option.textContent = company.name;
+                        dropdown.appendChild(option);
+                    });
+                } else {
+                    console.error('Elemento dropdown #newCompany não encontrado.');
+                }
+            } else {
+                // Se a resposta não for OK (ex: 401, 403), logue ou trate o erro
+                const errorText = await res.text();
+                console.error(`Erro ao carregar empresas: ${res.status} - ${errorText}`);
+                if (res.status === 401 || res.status === 403) {
+                    console.log('Token inválido, expirado ou sem permissão. Realizando logout...');
+                    localStorage.removeItem('accessToken');
+                    // Adicione sua lógica de logout aqui, por exemplo, redirecionar para a tela de login
+                    // window.location.reload(); // Recarrega a página para voltar à tela de login
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar empresas:', error);
+        }
+    }
+
+    async function loadSchedulesForDropdown() {
+        try {
+            const accessToken = localStorage.getItem('accessToken'); // <-- FAÇA O MESMO AQUI
+            if (!accessToken) {
+                console.warn('Nenhum token de acesso encontrado para carregar horários. O usuário pode não estar logado.');
+                return;
+            }
+
+            const res = await fetch(`${API_BASE_URL}/schedules`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const dropdown = document.getElementById('userSchedule'); // Assegure-se que este ID existe no seu HTML
+                if (dropdown) {
+                    dropdown.innerHTML = '<option value="">Selecione um horário</option>';
+
+                    data.forEach(schedule => {
+                        const option = document.createElement('option');
+                        option.value = schedule.id;
+                        option.textContent = schedule.name;
+                        dropdown.appendChild(option);
+                    });
+                } else {
+                    console.error('Elemento dropdown #userSchedule não encontrado.');
+                }
+            } else {
+                const errorText = await res.text();
+                console.error(`Erro ao carregar horários: ${res.status} - ${errorText}`);
+                if (res.status === 401 || res.status === 403) {
+                    console.log('Token inválido, expirado ou sem permissão. Realizando logout...');
+                    localStorage.removeItem('accessToken');
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar horários:', error);
+        }
+    }
+
+    async function loadDepartmentsForDropdown() {
+        try {
+            const accessToken = localStorage.getItem('accessToken'); // <-- E AQUI
+            if (!accessToken) {
+                console.warn('Nenhum token de acesso encontrado para carregar departamentos. O usuário pode não estar logado.');
+                return;
+            }
+
+            const res = await fetch(`${API_BASE_URL}/departments`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const dropdown = document.getElementById('userDepartment'); // Assegure-se que este ID existe no seu HTML
+                if (dropdown) {
+                    dropdown.innerHTML = '<option value="">Selecione um departamento</option>';
+
+                    data.forEach(department => {
+                        const option = document.createElement('option');
+                        option.value = department.id;
+                        option.textContent = department.name;
+                        dropdown.appendChild(option);
+                    });
+                } else {
+                    console.error('Elemento dropdown #userDepartment não encontrado.');
+                }
+            } else {
+                const errorText = await res.text();
+                console.error(`Erro ao carregar departamentos: ${res.status} - ${errorText}`);
+                if (res.status === 401 || res.status === 403) {
+                    console.log('Token inválido, expirado ou sem permissão. Realizando logout...');
+                    localStorage.removeItem('accessToken');
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar departamentos:', error);
+        }
+    }
+
+    async function loadRolesForDropdown() {
+        try {
+            const accessToken = localStorage.getItem('accessToken'); // <-- E FINALMENTE AQUI
+            if (!accessToken) {
+                console.warn('Nenhum token de acesso encontrado para carregar cargos. O usuário pode não estar logado.');
+                return;
+            }
+
+            const res = await fetch(`${API_BASE_URL}/roles`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const dropdown = document.getElementById('userRole'); // Assegure-se que este ID existe no seu HTML
+                if (dropdown) {
+                    dropdown.innerHTML = '<option value="">Selecione um cargo</option>';
+
+                    data.forEach(role => {
+                        const option = document.createElement('option');
+                        option.value = role.id;
+                        option.textContent = role.name;
+                        dropdown.appendChild(option);
+                    });
+                } else {
+                    console.error('Elemento dropdown #userRole não encontrado.');
+                }
+            } else {
+                const errorText = await res.text();
+                console.error(`Erro ao carregar cargos: ${res.status} - ${errorText}`);
+                if (res.status === 401 || res.status === 403) {
+                    console.log('Token inválido, expirado ou sem permissão. Realizando logout...');
+                    localStorage.removeItem('accessToken');
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar cargos:', error);
+        }
+    }
+
+    // Seu código document.addEventListener('DOMContentLoaded', ... ) deve vir aqui embaixo
+    // ...
+</script>
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loginScreen.style.display = "flex";
+            appWrapper.style.display = "none";
+            
+            // Verifica se já está logado ao carregar a página
+            if (localStorage.getItem('accessToken')) {
+                fetchLoggedInUserAndShowPointScreen();
+            }
+            
+            // Aplicar máscaras e configurar eventos
+            applyMasks();
+            updateDocumentMask();
+            
+            // Carregar empresas, horários, departamentos e cargos para os dropdowns
+            loadCompaniesForDropdown();
+            loadSchedulesForDropdown();
+            loadDepartmentsForDropdown();
+            loadRolesForDropdown();
+        });
+    </script>
+</body>
+</html>

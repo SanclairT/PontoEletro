@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Controle de Ponto</title>
+    
+    <link rel="stylesheet" href="./css/style.css"> 
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+
+    <style>
+        /* Estilos básicos para o layout do dashboard */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f2f5; 
+            margin: 0; 
+            padding: 0; 
+            color: #333;
+        }
+        h1 { 
+            text-align: center; 
+            color: #2c3e50; 
+            margin-top: 30px; 
+            margin-bottom: 20px;
+            font-size: 2.2em;
+        }
+        .dashboard-container { 
+            display: grid; 
+            /* Define 3 colunas, cada uma com no mínimo 300px, expandindo igualmente */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 25px; 
+            padding: 25px; 
+            max-width: 1300px; /* Aumenta um pouco para mais espaço */
+            margin: 25px auto; 
+            background-color: #ffffff; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        }
+        .card { 
+            background-color: #ffffff; 
+            padding: 25px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
+            text-align: center; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .card h3 { 
+            margin-top: 0; 
+            color: #555; 
+            font-size: 1.2em; 
+            margin-bottom: 15px;
+        }
+        .card p { 
+            font-size: 2.8em; /* Aumenta o tamanho da fonte para os números */
+            color: #007bff; /* Cor primária padrão */
+            font-weight: bold;
+            margin: 10px 0; 
+        }
+        /* Estilos específicos para os cards de métricas principais (cores conforme sua imagem) */
+        .card:nth-child(1) p { color: #28a745; } /* Verde para Total Funcionários */
+        .card:nth-child(2) p { color: #17a2b8; } /* Azul claro para Presentes Hoje */
+        .card:nth-child(3) p { color: #dc3545; } /* Vermelho para Ausentes */
+        .card:nth-child(4) p { color: #ffc107; } /* Amarelo para Atrasados */
+
+
+        .chart-card { 
+            grid-column: span 2; /* Faz o gráfico de linha ocupar 2 colunas */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas { 
+            max-width: 100%; 
+            height: 350px; /* Altura fixa para os gráficos */
+            margin-top: 15px;
+        }
+
+        /* Estilos para telas menores (responsividade) */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr; /* Uma coluna em telas pequenas */
+                padding: 15px;
+            }
+            .chart-card {
+                grid-column: span 1; /* Gráficos também ocupam uma coluna */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Painel Administrativo</h1>
+
+    <div class="dashboard-container">
+        <div class="card">
+            <h3>Total de Funcionários</h3>
+            <p id="totalFuncionarios">Carregando...</p>
+        </div>
+        <div class="card">
+            <h3>Presentes Hoje</h3>
+            <p id="presentesHoje">Carregando...</p>
+        </div>
+        <div class="card">
+            <h3>Ausentes</h3>
+            <p id="ausentesHoje">Carregando...</p>
+        </div>
+        <div class="card">
+            <h3>Atrasados</h3>
+            <p id="atrasadosHoje">Carregando...</p>
+        </div>
+
+        <div class="card chart-card">
+            <h3>Horas Trabalhadas - Semana</h3>
+            <canvas id="weeklyHoursChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h3>Status de Presença</h3>
+            <canvas id="presenceStatusChart"></canvas>
+        </div>
+
+        </div>
+
+    <script src="./js/dashboard.js"></script> 
+</body>
+</html>
